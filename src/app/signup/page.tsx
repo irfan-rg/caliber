@@ -10,7 +10,6 @@ export default function SignupPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
-  const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const router = useRouter()
@@ -19,13 +18,11 @@ export default function SignupPage() {
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    setError(null)
     setLoading(true)
 
     // Validate passwords match
     if (password !== confirmPassword) {
       const errorMsg = 'Passwords do not match'
-      setError(errorMsg)
       notify({
         variant: 'error',
         title: 'Validation error',
@@ -38,7 +35,6 @@ export default function SignupPage() {
     // Validate password length
     if (password.length < 6) {
       const errorMsg = 'Password must be at least 6 characters long'
-      setError(errorMsg)
       notify({
         variant: 'error',
         title: 'Validation error',
@@ -58,7 +54,6 @@ export default function SignupPage() {
       })
 
       if (signUpError) {
-        setError(signUpError.message)
         notify({
           variant: 'error',
           title: 'Signup failed',
@@ -71,7 +66,6 @@ export default function SignupPage() {
         // Check if email confirmation is required
         if (data.user.identities && data.user.identities.length === 0) {
           const errorMsg = 'An account with this email already exists'
-          setError(errorMsg)
           notify({
             variant: 'error',
             title: 'Account exists',
@@ -97,7 +91,6 @@ export default function SignupPage() {
       }
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'An unexpected error occurred'
-      setError(errorMsg)
       notify({
         variant: 'error',
         title: 'Signup error',

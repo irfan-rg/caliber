@@ -9,7 +9,6 @@ import { useToast } from '@/components/ui/ToastProvider'
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const router = useRouter()
   const supabase = createClient()
@@ -17,7 +16,6 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    setError(null)
     setLoading(true)
 
     try {
@@ -146,7 +144,7 @@ export default function LoginPage() {
 
         {/* Sign up link */}
         <p className="mt-6 text-center text-sm text-[var(--color-text-muted)]">
-          Don't have an account?{' '}
+          Don&apos;t have an account?{' '}
           <Link
             href="/signup"
             className="font-semibold text-[#007AFF] hover:underline"
