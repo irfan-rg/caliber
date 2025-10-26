@@ -152,10 +152,10 @@ export default function DashboardPage() {
 
   if (showInitialSkeleton) {
     return (
-      <div className="flex flex-1 flex-col gap-8 px-4 pb-16 pt-8 sm:px-6 lg:px-8">
+      <div className="flex flex-1 flex-col gap-6 sm:gap-8 px-3 sm:px-4 lg:px-8 pb-12 sm:pb-16 pt-6 sm:pt-8">
         <div className="space-y-2">
-          <div className="h-10 w-44 animate-pulse rounded-full bg-[#007AFF]/10" />
-          <div className="h-5 w-64 animate-pulse rounded-full bg-black/10 dark:bg-white/10" />
+          <div className="h-8 sm:h-10 w-36 sm:w-44 animate-pulse rounded-full bg-[#007AFF]/10" />
+          <div className="h-4 sm:h-5 w-48 sm:w-64 animate-pulse rounded-full bg-black/10 dark:bg-white/10" />
         </div>
         <StatCardSkeletonGrid count={4} fast={hasLoadedOnce} />
         <ChartSkeleton fast={hasLoadedOnce} />
@@ -165,7 +165,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="relative flex flex-1 flex-col gap-8 px-4 pb-16 pt-8 sm:px-6 lg:px-8">
+    <div className="relative flex flex-1 flex-col gap-6 sm:gap-8 px-3 sm:px-4 lg:px-8 pb-12 sm:pb-16 pt-6 sm:pt-8">
       <AnimatePresence>
         {(loading || isPending || progress > 0) && progress < 100 && (
           <motion.div
@@ -180,22 +180,22 @@ export default function DashboardPage() {
       </AnimatePresence>
 
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-3 sm:gap-4 lg:flex-row lg:items-center lg:justify-between">
         <motion.div
           initial={{ opacity: 0, y: -12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.36, ease: [0.16, 1, 0.3, 1] }}
           className="flex flex-col gap-2"
         >
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight text-[#1C1C1E] dark:text-white">
+          <h1 className="mt-2 text-2xl sm:text-3xl font-semibold tracking-tight text-[#1C1C1E] dark:text-white">
             Command Center
           </h1>
-          <p className="text-sm text-[#8E8E93]">
+          <p className="text-xs sm:text-sm text-[#8E8E93]">
             Monitor Evaluation Volume, Quality, and Latency in Real Time.
           </p>
         </motion.div>
         <motion.div
-          className="flex flex-wrap items-center gap-2 mt-2 sm:mt-0"
+          className="flex flex-wrap items-center gap-2 mt-0 sm:mt-2 lg:mt-0"
           initial={{ opacity: 0, y: -6 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1], delay: 0.05 }}
@@ -210,7 +210,7 @@ export default function DashboardPage() {
                 whileTap={{ scale: 0.97 }}
                 onClick={() => handleRangeChange(range)}
                 className={
-                  'relative inline-flex items-center justify-center overflow-hidden rounded-full px-4 py-2 text-sm font-semibold transition-colors'
+                  'relative inline-flex items-center justify-center overflow-hidden rounded-full px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold transition-colors'
                 }
               >
                 <span
@@ -244,7 +244,7 @@ export default function DashboardPage() {
         />
       )}
 
-      <div className="grid gap-8 lg:grid-cols-[2fr_3fr]">
+      <div className="grid gap-6 sm:gap-8 xl:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
         <TrendChart data={filteredTrends} />
         <RecentEvals evals={recentEvals} />
       </div>

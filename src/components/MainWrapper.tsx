@@ -14,7 +14,7 @@ export default function MainWrapper({ children }: MainWrapperProps) {
   const needsPadding = pathname !== '/' && pathname !== '/login' && pathname !== '/signup'
   
   return (
-    <main className={`flex min-h-screen flex-col ${needsPadding ? 'pt-20' : ''}`}>
+    <main className={`flex min-h-screen flex-col ${needsPadding ? 'pt-16 sm:pt-20' : ''}`}>
       {children}
     </main>
   )

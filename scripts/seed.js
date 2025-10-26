@@ -119,57 +119,64 @@ function generateTimestamp() {
   return timestamp.toISOString()
 }
 
-// Create or get test user
-async function ensureTestUser() {
-  console.log('🔍 Checking for test user...')
+// ============ IMPROVED USER AUTHENTICATION ============
+
+async function ensureTestUserAuthenticated() {
+  console.log('🔍 Authenticating test user...')
   
   try {
-    // Try to sign in first
+    // First, try to sign in
     const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
       email: TEST_USER.email,
       password: TEST_USER.password
     })
 
     if (signInData?.user) {
-      console.log('✅ Test user already exists, signed in as:', TEST_USER.email)
+      console.log('✅ Successfully authenticated!')
+      console.log(`   Email: ${signInData.user.email}`)
+      console.log(`   User ID: ${signInData.user.id}`)
       return signInData.user
     }
 
     // If sign in failed, try to create the user
     if (signInError) {
-      console.log('📝 Creating new test user...')
+      console.log('📝 User not found, creating new test user...')
       const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email: TEST_USER.email,
-        password: TEST_USER.password
+        password: TEST_USER.password,
+        options: {
+          data: {
+            full_name: 'Test User'
+          }
+        }
       })
 
       if (signUpError) {
         console.error('\n❌ Could not create user:', signUpError.message)
-        console.error('\n� Make sure:')
+        console.error('\n💡 Make sure:')
         console.error('   1. Email confirmation is disabled in Supabase (Authentication > Settings)')
         console.error('   2. The email format is valid')
         console.error('   3. Password meets requirements (min 6 characters)')
-        console.error('\n📝 Or create the user manually:')
-        console.error('   1. Run: npm run dev')
-        console.error('   2. Go to: http://localhost:3000/signup')
-        console.error(`   3. Sign up with: ${TEST_USER.email} / ${TEST_USER.password}\n`)
         throw signUpError
       }
 
       if (signUpData?.user) {
         console.log('✅ Test user created successfully!')
         
-        // Try to sign in with the new user
+        // Sign in immediately with the new user
         const { data: newSignInData, error: newSignInError } = await supabase.auth.signInWithPassword({
           email: TEST_USER.email,
           password: TEST_USER.password
         })
 
         if (newSignInError || !newSignInData?.user) {
-          console.error('⚠️  User created but auto sign-in failed. Please run the script again.')
+          console.error('⚠️  User created but auto sign-in failed.')
+          console.error('   Please run the script again.')
           throw new Error('User created, please run script again')
         }
 
+        console.log('✅ Authenticated with new user!')
+        console.log(`   User ID: ${newSignInData.user.id}`)
         return newSignInData.user
       }
     }
@@ -180,9 +187,102 @@ async function ensureTestUser() {
   }
 }
 
+// ============ VERIFY RLS ACCESS ============
+
+async function verifyRLSAccess(userId) {
+  console.log('\n🔍 Verifying RLS access...')
+  
+  try {
+    // Test if we can query evaluations
+    const { data, error } = await supabase
+      .from('evaluations')
+      .select('count')
+      .limit(1)
+    
+    if (error) {
+      console.log(`   ⚠️  RLS query test failed: ${error.message}`)
+      console.log('   This might be expected if no data exists yet.')
+      return false
+    }
+    
+    console.log('   ✅ RLS policies working correctly')
+    return true
+  } catch (error) {
+    console.log(`   ⚠️  RLS verification error: ${error.message}`)
+    return false
+  }
+}
+
+// ============ CHECK FOR EXISTING DATA ============
+
+async function checkExistingData(userId) {
+  console.log('\n🔍 Checking for existing data...')
+  
+  try {
+    const { data: evals, error: evalsError } = await supabase
+      .from('evaluations')
+      .select('id')
+      .eq('user_id', userId)
+      .limit(1)
+    
+    if (evalsError) {
+      console.log('   ⚠️  Could not check existing evaluations')
+      return false
+    }
+    
+    if (evals && evals.length > 0) {
+      console.log('   ⚠️  Found existing evaluations for this user!')
+      return true
+    }
+    
+    console.log('   ✅ No existing data found')
+    return false
+  } catch (error) {
+    console.log(`   ⚠️  Error checking data: ${error.message}`)
+    return false
+  }
+}
+
+// ============ CLEANUP EXISTING DATA ============
+
+async function cleanupExistingData(userId) {
+  console.log('\n🧹 Cleaning up existing data...')
+  
+  try {
+    // Delete evaluations
+    const { error: evalsError } = await supabase
+      .from('evaluations')
+      .delete()
+      .eq('user_id', userId)
+    
+    if (evalsError) {
+      console.log(`   ⚠️  Could not delete evaluations: ${evalsError.message}`)
+    } else {
+      console.log('   ✅ Deleted existing evaluations')
+    }
+    
+    // Delete config
+    const { error: configError } = await supabase
+      .from('user_configs')
+      .delete()
+      .eq('user_id', userId)
+    
+    if (configError) {
+      console.log(`   ⚠️  Could not delete config: ${configError.message}`)
+    } else {
+      console.log('   ✅ Deleted existing config')
+    }
+    
+    return true
+  } catch (error) {
+    console.error(`   ❌ Cleanup error: ${error.message}`)
+    return false
+  }
+}
+
 // Insert default config
 async function ensureConfig(userId) {
-  console.log('🔍 Checking for user config...')
+  console.log('\n🔍 Setting up user config...')
 
   try {
     // Check if config exists
@@ -190,15 +290,15 @@ async function ensureConfig(userId) {
       .from('user_configs')
       .select('*')
       .eq('user_id', userId)
-      .single()
+      .maybeSingle()
 
     if (existingConfig) {
-      console.log('✅ Config already exists')
+      console.log('   ✅ Config already exists')
       return existingConfig
     }
 
     // Create default config
-    console.log('📝 Creating default config...')
+    console.log('   📝 Creating default config...')
     const { data: newConfig, error: insertError } = await supabase
       .from('user_configs')
       .insert({
@@ -212,14 +312,14 @@ async function ensureConfig(userId) {
       .single()
 
     if (insertError) {
-      console.error('❌ Error creating config:', insertError.message)
+      console.error(`   ❌ Error creating config: ${insertError.message}`)
       throw insertError
     }
 
-    console.log('✅ Config created')
+    console.log('   ✅ Config created successfully')
     return newConfig
   } catch (error) {
-    console.error('❌ Error with config:', error.message)
+    console.error(`   ❌ Error with config: ${error.message}`)
     throw error
   }
 }
@@ -227,6 +327,7 @@ async function ensureConfig(userId) {
 // Generate evaluation records
 async function generateEvaluations(userId, count) {
   console.log(`\n📊 Generating ${count} evaluation records...`)
+  console.log(`   Using User ID: ${userId}`)
   
   const evaluations = []
   const batchSize = 50
@@ -237,7 +338,7 @@ async function generateEvaluations(userId, count) {
     const score = generateScore()
     
     evaluations.push({
-      user_id: userId,
+      user_id: userId, // ✅ Using authenticated user's ID
       interaction_id: `eval-${String(i + 1).padStart(6, '0')}`,
       prompt: PROMPTS[promptIndex],
       response: RESPONSES[promptIndex],
@@ -256,29 +357,30 @@ async function generateEvaluations(userId, count) {
           .insert(evaluations)
 
         if (error) {
-          console.error(`❌ Error inserting batch: ${error.message}`)
+          console.error(`\n   ❌ Error inserting batch: ${error.message}`)
+          console.error(`   Hint: Check RLS policies and user authentication`)
           throw error
         }
 
         created += evaluations.length
         const progress = Math.round((created / count) * 100)
-        process.stdout.write(`\r⏳ Progress: ${progress}% (${created}/${count})`)
+        process.stdout.write(`\r   ⏳ Progress: ${progress}% (${created}/${count})`)
         
         evaluations.length = 0 // Clear array
       } catch (error) {
-        console.error('\n❌ Failed to insert batch:', error.message)
+        console.error('\n   ❌ Failed to insert batch:', error.message)
         throw error
       }
     }
   }
 
-  console.log('\n✅ All evaluations created!')
+  console.log('\n   ✅ All evaluations created!')
   return created
 }
 
 // Get statistics
 async function getStatistics(userId) {
-  console.log('\n📈 Calculating statistics...')
+  console.log('\n📈 Verifying data with statistics...')
 
   try {
     const { data, error } = await supabase
@@ -286,7 +388,16 @@ async function getStatistics(userId) {
       .select('score, latency_ms, pii_tokens_redacted')
       .eq('user_id', userId)
 
-    if (error) throw error
+    if (error) {
+      console.error(`   ❌ Error fetching stats: ${error.message}`)
+      throw error
+    }
+
+    if (!data || data.length === 0) {
+      console.log('   ⚠️  No evaluations found!')
+      console.log('   This might indicate an RLS issue.')
+      return null
+    }
 
     const total = data.length
     const avgScore = (data.reduce((sum, e) => sum + e.score, 0) / total).toFixed(2)
@@ -302,45 +413,85 @@ async function getStatistics(userId) {
       totalPii
     }
   } catch (error) {
-    console.error('❌ Error calculating statistics:', error.message)
+    console.error(`   ❌ Error calculating statistics: ${error.message}`)
     return null
   }
 }
 
 // Main function
 async function main() {
-  console.log('🌱 Starting database seeding process...\n')
-  console.log('=' .repeat(50))
+  console.log('🌱 Starting IMPROVED database seeding process...\n')
+  console.log('=' .repeat(60))
+
+  let user
 
   try {
-    // Step 1: Ensure test user exists
-    const user = await ensureTestUser()
+    // Step 1: Ensure test user is authenticated
+    user = await ensureTestUserAuthenticated()
     
-    // Step 2: Ensure config exists
+    if (!user) {
+      throw new Error('Failed to authenticate user')
+    }
+
+    // Step 2: Verify RLS access
+    await verifyRLSAccess(user.id)
+
+    // Step 3: Check for existing data
+    const hasExistingData = await checkExistingData(user.id)
+    
+    if (hasExistingData) {
+      console.log('\n⚠️  EXISTING DATA DETECTED!')
+      console.log('   Options:')
+      console.log('   1. Ctrl+C to cancel and keep existing data')
+      console.log('   2. Wait 5 seconds to DELETE existing data and reseed\n')
+      
+      // Wait 5 seconds
+      await new Promise(resolve => setTimeout(resolve, 5000))
+      
+      await cleanupExistingData(user.id)
+    }
+
+    // Step 4: Ensure config exists
     await ensureConfig(user.id)
 
-    // Step 3: Generate evaluations
+    // Step 5: Generate evaluations
     const count = Math.floor(Math.random() * 501) + 500 // 500-1000
-    const created = await generateEvaluations(user.id, count)
+    await generateEvaluations(user.id, count)
 
-    // Step 4: Show statistics
+    // Step 6: Verify with statistics
     const stats = await getStatistics(user.id)
 
-    console.log('\n' + '='.repeat(50))
+    if (!stats) {
+      throw new Error('Failed to retrieve statistics - possible RLS issue!')
+    }
+
+    console.log('\n' + '='.repeat(60))
     console.log('🎉 SEEDING COMPLETE!\n')
     console.log(`📧 User: ${TEST_USER.email}`)
     console.log(`📝 Password: ${TEST_USER.password}`)
+    console.log(`🆔 User ID: ${user.id}`)
     console.log(`\n📊 Summary:`)
     console.log(`   Total Evaluations: ${stats.total}`)
     console.log(`   Average Score: ${stats.avgScore}`)
     console.log(`   Average Latency: ${stats.avgLatency}ms`)
     console.log(`   Success Rate: ${stats.successRate}%`)
     console.log(`   PII Tokens Redacted: ${stats.totalPii}`)
-    console.log('\n✅ You can now log in and view the dashboard!')
-    console.log('=' .repeat(50))
+    console.log('\n✅ Data is properly associated with your authenticated user!')
+    console.log('✅ RLS policies verified - data should appear in dashboard!')
+    console.log('\n🚀 You can now log in and view the dashboard!')
+    console.log('=' .repeat(60))
 
   } catch (error) {
     console.error('\n❌ Seeding failed:', error.message)
+    if (user) {
+      console.error(`\n💡 Debug info:`)
+      console.error(`   User ID: ${user.id}`)
+      console.error(`   Email: ${user.email}`)
+    }
+    console.error('\n📝 Troubleshooting:')
+    console.error('   1. Check RLS policies in Supabase')
+    console.error('   2. Verify email confirmation is disabled')
+    console.error('   3. Check if user can authenticate')
     process.exit(1)
   }
 }

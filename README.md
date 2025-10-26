@@ -303,6 +303,34 @@ Request body:
 - Supports 20,000+ evaluations with sub-2s load times
 - Navigation feels "blink of an eye" fast after initial load
 
+## Production Deployment
+
+### Supabase Auto-Pause Prevention
+
+⚠️ **Important:** Supabase free tier automatically pauses projects after 7 days of inactivity.
+
+We've implemented an **automated keep-alive system** using Vercel Cron Jobs:
+- Runs daily at 8:00 AM UTC
+- Performs a lightweight database query
+- Prevents database auto-pause
+- Zero cost on free tier
+
+**Setup:**
+1. Deploy to Vercel (cron job auto-configured in `vercel.json`)
+2. (Optional) Add `CRON_SECRET` environment variable for security
+3. Verify in Vercel Dashboard → Settings → Crons
+
+📖 **Full Guide:** See [mrkdwns/SUPABASE_KEEP_ALIVE.md](mrkdwns/SUPABASE_KEEP_ALIVE.md)
+
+### Environment Variables
+
+Required for production:
+```bash
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+CRON_SECRET=your_random_secret  # Optional but recommended
+```
+
 ## Testing
 
 ### Test Credentials
@@ -319,6 +347,7 @@ Request body:
 - [ ] Verify PII masking functionality
 - [ ] Test with second user account for data isolation
 - [ ] Verify caching behavior with rapid navigation
+- [ ] Test keep-alive endpoint: `/api/cron/keep-alive`
 
 
 ## Security Features

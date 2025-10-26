@@ -326,16 +326,15 @@ export default function ConfigPage() {
               role="switch"
               aria-checked={config.obfuscate_pii}
               onClick={() => updateConfig('obfuscate_pii', !config.obfuscate_pii)}
-              className={
-                'relative h-7 w-12 rounded-full bg-[#C7C7CC] transition dark:bg-[#3A3A3C]'
-              }
+              className={`relative flex h-7 w-12 items-center rounded-full px-1 transition ${
+                config.obfuscate_pii ? 'justify-end' : 'justify-start'
+              }`}
               animate={{ backgroundColor: config.obfuscate_pii ? '#007AFF' : '#C7C7CC' }}
             >
               <motion.span
                 layout
-                transition={{ type: 'spring', stiffness: 280, damping: 20 }}
-                className="absolute left-1 top-1 h-5 w-5 rounded-full bg-white shadow"
-                style={{ x: config.obfuscate_pii ? 20 : 0 }}
+                transition={{ type: 'spring', stiffness: 300, damping: 22 }}
+                className="h-5 w-5 rounded-full bg-white shadow"
               />
             </motion.button>
           </div>

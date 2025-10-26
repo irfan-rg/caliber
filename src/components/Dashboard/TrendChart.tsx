@@ -92,14 +92,14 @@ export default function TrendChart({ data }: TrendChartProps) {
   if (!formattedData || formattedData.length === 0) {
     return (
       <motion.div
-        className="glass-card flex h-[360px] flex-col items-center justify-center rounded-3xl text-center text-[#8E8E93]"
+        className="glass-card flex h-[280px] sm:h-[360px] flex-col items-center justify-center rounded-2xl sm:rounded-3xl text-center text-[#8E8E93] p-4"
         variants={motionVariants.fadeIn}
         initial="hidden"
         animate="show"
         transition={transitions.subtle}
       >
-        <span className="text-sm font-medium">No trend data yet</span>
-        <p className="mt-2 max-w-sm text-xs text-[#8E8E93]">
+        <span className="text-xs sm:text-sm font-medium">No trend data yet</span>
+        <p className="mt-2 max-w-sm text-[10px] sm:text-xs text-[#8E8E93]">
           Once evaluations begin streaming in, you will see accuracy and latency trends come alive here.
         </p>
       </motion.div>
@@ -109,7 +109,7 @@ export default function TrendChart({ data }: TrendChartProps) {
   return (
     <motion.section
       className={cn(
-        'relative overflow-hidden rounded-3xl border border-white/60 bg-white/90 p-6 shadow-[0_24px_60px_rgba(15,15,15,0.14)] backdrop-blur-3xl',
+        'relative overflow-hidden rounded-2xl sm:rounded-3xl border border-white/60 bg-white/90 p-4 sm:p-6 shadow-[0_24px_60px_rgba(15,15,15,0.14)] backdrop-blur-3xl',
         'dark:border-white/10 dark:bg-[#1D1D1F]/85'
       )}
       variants={motionVariants.fadeUp}
@@ -118,17 +118,17 @@ export default function TrendChart({ data }: TrendChartProps) {
       transition={transitions.default}
       whileHover={{ scale: 1.005 }}
     >
-      <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mb-4 sm:mb-6 flex flex-col gap-1 sm:gap-2">
         <div>
-          <h3 className="text-lg font-semibold tracking-tight text-[#1C1C1E] dark:text-white">
+          <h3 className="text-base sm:text-lg font-semibold tracking-tight text-[#1C1C1E] dark:text-white">
             Daily Performance Trends
           </h3>
-          <p className="text-sm text-[#8E8E93]">Score and latency across the selected window</p>
+          <p className="text-xs sm:text-sm text-[#8E8E93]">Score and latency across the selected window</p>
         </div>
       </div>
-      <div className="h-[320px]">
+      <div className="h-[240px] sm:h-[320px]">
         <ResponsiveContainer>
-          <LineChart data={formattedData} margin={{ top: 10, right: 24, left: 0, bottom: 0 }}>
+          <LineChart data={formattedData} margin={{ top: 10, right: 8, left: -16, bottom: 0 }}>
             <defs>
               <linearGradient id="scoreGradient" x1="0" x2="0" y1="0" y2="1">
                 <stop offset="0%" stopColor="#34C759" stopOpacity={0.35} />
@@ -142,43 +142,46 @@ export default function TrendChart({ data }: TrendChartProps) {
             <CartesianGrid strokeDasharray="4 4" stroke="rgba(28,28,30,0.08)" vertical={false} />
             <XAxis
               dataKey="displayDate"
-              tick={{ fill: 'rgba(28,28,30,0.45)', fontSize: 12 }}
+              tick={{ fill: 'rgba(28,28,30,0.45)', fontSize: 10 }}
               tickLine={false}
               axisLine={false}
               stroke="transparent"
+              interval="preserveStartEnd"
             />
             <YAxis
               yAxisId="left"
-              tick={{ fill: 'rgba(28,28,30,0.45)', fontSize: 12 }}
+              tick={{ fill: 'rgba(28,28,30,0.45)', fontSize: 10 }}
               tickLine={false}
               axisLine={false}
               stroke="transparent"
               domain={[0, 100]}
+              width={32}
             />
             <YAxis
               yAxisId="right"
               orientation="right"
-              tick={{ fill: 'rgba(28,28,30,0.35)', fontSize: 11 }}
+              tick={{ fill: 'rgba(28,28,30,0.35)', fontSize: 9 }}
               tickLine={false}
               axisLine={false}
               stroke="transparent"
+              width={32}
             />
             <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'rgba(0,122,255,0.15)', strokeWidth: 2 }} />
             <Legend
-              wrapperStyle={{ paddingTop: 12 }}
+              wrapperStyle={{ paddingTop: 8, fontSize: 11 }}
               formatter={(value) => (
-                <span className="text-sm text-[#8E8E93]">{value}</span>
+                <span className="text-[10px] sm:text-xs text-[#8E8E93]">{value}</span>
               )}
             />
             <Line
               yAxisId="left"
               type={chartConfig.curveType}
               dataKey="avgScore"
-              name="Average Score"
+              name="Avg Score"
               stroke="#34C759"
               strokeWidth={chartConfig.strokeWidth}
-              dot={{ r: chartConfig.dotRadius, strokeWidth: 0, fill: '#34C759' }}
-              activeDot={{ r: chartConfig.dotRadius + 2, stroke: '#FFFFFF', strokeWidth: 2 }}
+              dot={{ r: chartConfig.dotRadius - 1, strokeWidth: 0, fill: '#34C759' }}
+              activeDot={{ r: chartConfig.dotRadius + 1, stroke: '#FFFFFF', strokeWidth: 2 }}
               isAnimationActive
               animationDuration={600}
             />
@@ -186,11 +189,11 @@ export default function TrendChart({ data }: TrendChartProps) {
               yAxisId="right"
               type={chartConfig.curveType}
               dataKey="avgLatency"
-              name="Average Latency (ms)"
+              name="Latency (ms)"
               stroke="#FF9500"
               strokeWidth={chartConfig.strokeWidth}
-              dot={{ r: chartConfig.dotRadius, strokeWidth: 0, fill: '#FF9500' }}
-              activeDot={{ r: chartConfig.dotRadius + 2, stroke: '#FFFFFF', strokeWidth: 2 }}
+              dot={{ r: chartConfig.dotRadius - 1, strokeWidth: 0, fill: '#FF9500' }}
+              activeDot={{ r: chartConfig.dotRadius + 1, stroke: '#FFFFFF', strokeWidth: 2 }}
               isAnimationActive
               animationDuration={600}
             />
@@ -198,11 +201,11 @@ export default function TrendChart({ data }: TrendChartProps) {
               yAxisId="left"
               type={chartConfig.curveType}
               dataKey="count"
-              name="Evaluations"
+              name="Evals"
               stroke="#5856D6"
               strokeWidth={chartConfig.strokeWidth - 0.5}
-              dot={{ r: chartConfig.dotRadius - 1, strokeWidth: 0, fill: '#5856D6' }}
-              activeDot={{ r: chartConfig.dotRadius + 1, stroke: '#FFFFFF', strokeWidth: 2 }}
+              dot={{ r: chartConfig.dotRadius - 1.5, strokeWidth: 0, fill: '#5856D6' }}
+              activeDot={{ r: chartConfig.dotRadius, stroke: '#FFFFFF', strokeWidth: 2 }}
               strokeDasharray="6 6"
             />
           </LineChart>

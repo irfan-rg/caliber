@@ -103,10 +103,10 @@ export default function EvaluationsPage() {
   // Only show skeleton on initial load when we have no evaluations data
   if (loading && !hasLoadedOnce) {
     return (
-      <div className="flex flex-1 flex-col gap-8 px-4 pb-16 pt-8 sm:px-6 lg:px-8">
+      <div className="flex flex-1 flex-col gap-6 sm:gap-8 px-3 sm:px-4 lg:px-8 pb-12 sm:pb-16 pt-6 sm:pt-8">
         <div className="space-y-2">
-          <div className="h-10 w-48 animate-pulse rounded-full bg-[#007AFF]/10" />
-          <div className="h-5 w-72 animate-pulse rounded-full bg-black/10 dark:bg-white/10" />
+          <div className="h-8 sm:h-10 w-40 sm:w-48 animate-pulse rounded-full bg-[#007AFF]/10" />
+          <div className="h-4 sm:h-5 w-56 sm:w-72 animate-pulse rounded-full bg-black/10 dark:bg-white/10" />
         </div>
         <StatCardSkeletonGrid count={4} fast={hasLoadedOnce} />
         <ChartSkeleton fast={hasLoadedOnce} />
@@ -116,7 +116,7 @@ export default function EvaluationsPage() {
   }
 
   return (
-    <div className="relative flex flex-1 flex-col gap-8 px-4 pb-16 pt-8 sm:px-6 lg:px-8">
+    <div className="relative flex flex-1 flex-col gap-6 sm:gap-8 px-3 sm:px-4 lg:px-8 pb-12 sm:pb-16 pt-6 sm:pt-8">
       <AnimatePresence>
         {(loading || isPending || progress > 0) && progress < 100 && (
           <motion.div
@@ -134,12 +134,12 @@ export default function EvaluationsPage() {
         initial={{ opacity: 0, y: -12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.38, ease: [0.16, 1, 0.3, 1] }}
-        className="flex flex-col gap-3"
+        className="flex flex-col gap-2 sm:gap-3"
       >
-        <h1 className="text-3xl font-semibold tracking-tight text-[#1C1C1E] dark:text-white">
+        <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-[#1C1C1E] dark:text-white">
           Evaluations
         </h1>
-        <p className="text-sm text-[#8E8E93]">
+        <p className="text-xs sm:text-sm text-[#8E8E93]">
           Showing page {page} of {totalPages || 1}. {totalCount} total evaluations ingested.
         </p>
       </motion.div>
@@ -149,20 +149,20 @@ export default function EvaluationsPage() {
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.34, ease: [0.16, 1, 0.3, 1] }}
-          className="glass-card flex flex-col items-center justify-center gap-4 rounded-3xl p-12 text-center"
+          className="glass-card flex flex-col items-center justify-center gap-4 rounded-2xl sm:rounded-3xl p-8 sm:p-12 text-center"
         >
-          <span className="text-5xl">📡</span>
+          <span className="text-4xl sm:text-5xl">📡</span>
           <div className="space-y-2">
-            <h2 className="text-xl font-semibold text-[#1C1C1E] dark:text-white">
+            <h2 className="text-lg sm:text-xl font-semibold text-[#1C1C1E] dark:text-white">
               No Evaluations Yet
             </h2>
-            <p className="text-sm text-[#8E8E93]">
+            <p className="text-xs sm:text-sm text-[#8E8E93]">
               Kick off your First Evaluation by Configuring the API Connection.
             </p>
           </div>
           <Link
             href="/config"
-            className="rounded-full bg-[#007AFF] px-5 py-2 text-sm font-semibold text-white shadow-[0_14px_30px_rgba(0,122,255,0.25)] transition-transform duration-200 hover:scale-[1.02]"
+            className="rounded-full bg-[#007AFF] px-4 sm:px-5 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold text-white shadow-[0_14px_30px_rgba(0,122,255,0.25)] transition-transform duration-200 hover:scale-[1.02]"
           >
             Configure Settings
           </Link>

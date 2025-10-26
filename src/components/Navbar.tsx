@@ -161,26 +161,26 @@ export default function Navbar() {
     <AnimatePresence>
       {isScrolled && (
         <motion.header
-          className="fixed top-4 z-40 flex w-full justify-center px-4"
+          className="fixed top-4 z-40 flex w-full flex-col items-center px-4"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -20 }}
           transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
         >
-      <div className="glass-card flex w-full max-w-6xl items-center justify-between gap-6 rounded-3xl border border-white/50 px-4 py-3 backdrop-blur-xl shadow-[0_8px_24px_rgba(17,17,17,0.06)] dark:border-white/10 dark:shadow-[0_18px_42px_rgba(0,0,0,0.6)]">
-        <div className="flex items-center gap-4">
+      <div className="glass-card flex w-full max-w-6xl items-center justify-between gap-2 sm:gap-6 rounded-3xl border border-white/50 px-3 sm:px-4 py-2 sm:py-3 backdrop-blur-xl shadow-[0_8px_24px_rgba(17,17,17,0.06)] dark:border-white/10 dark:shadow-[0_18px_42px_rgba(0,0,0,0.6)]">
+        <div className="flex items-center gap-2 sm:gap-4 min-w-0">
           <Link
             href="/"
-            className="group flex items-center gap-2 rounded-full px-2 py-1 text-sm font-semibold text-[#1C1C1E] transition-transform duration-200 hover:scale-[1.02] dark:text-white"
+            className="group flex items-center gap-1.5 sm:gap-2 rounded-full px-1.5 sm:px-2 py-1 text-sm font-semibold text-[#1C1C1E] transition-transform duration-200 hover:scale-[1.02] dark:text-white shrink-0"
           >
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#007AFF]/10 text-[#007AFF]">
-              <p className="text-2xl font-semibold">⚘</p>
+            <div className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-full bg-[#007AFF]/10 text-[#007AFF]">
+              <p className="text-xl sm:text-2xl font-semibold">⚘</p>
             </div>
-            <span className="text-2xl tracking-tight">Caliber</span>
+            <span className="text-xl sm:text-2xl tracking-tight">Caliber</span>
           </Link>
 
           {user && (
-            <nav className="hidden items-center gap-2 md:flex">
+            <nav className="hidden items-center gap-1 sm:gap-2 lg:flex">
               {navItems.map((item) => {
                 const active = isActive(item)
                 return (
@@ -189,18 +189,18 @@ export default function Navbar() {
                       href={item.href}
                       prefetch={true}
                       className={cn(
-                        'flex items-center gap-2 rounded-full px-4 py-2 text-sm transition-colors duration-200',
+                        'flex items-center gap-2 rounded-full px-3 lg:px-4 py-1.5 lg:py-2 text-sm transition-colors duration-200',
                         active
                           ? 'text-[#007AFF]'
                           : 'text-[#8E8E93] hover:text-[#1C1C1E] dark:hover:text-white'
                       )}
                     >
-                      <span className="hidden md:inline-flex">{item.label}</span>
+                      <span className="hidden lg:inline-flex">{item.label}</span>
                     </Link>
                     {active && (
                       <motion.span
                         layoutId="active-nav"
-                        className="absolute inset-x-3 -bottom-1 h-[2px] rounded-full bg-[#007AFF]"
+                        className="absolute inset-x-2 lg:inset-x-3 -bottom-1 h-[2px] rounded-full bg-[#007AFF]"
                         transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
                       />
                     )}
@@ -211,14 +211,14 @@ export default function Navbar() {
           )}
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           {loading ? (
-            <div className="h-9 w-28 animate-pulse rounded-full bg-[#007AFF]/10" />
+            <div className="h-8 sm:h-9 w-20 sm:w-28 animate-pulse rounded-full bg-[#007AFF]/10" />
           ) : user ? (
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               <button
                 type="button"
-                className="hidden rounded-full bg-[#007AFF] px-4 py-2 text-sm font-semibold text-white shadow-[0_14px_30px_rgba(0,122,255,0.25)] transition-transform duration-200 hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#007AFF]/40 sm:inline-flex"
+                className="hidden rounded-full bg-[#007AFF] px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold text-white shadow-[0_14px_30px_rgba(0,122,255,0.25)] transition-transform duration-200 hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#007AFF]/40 lg:inline-flex"
                 onClick={() => router.push('/config')}
               >
                 Configure
@@ -226,19 +226,19 @@ export default function Navbar() {
               <div className="relative" ref={dropdownRef}>
                 <motion.button
                   type="button"
-                  className="flex items-center gap-3 rounded-full border border-white/60 bg-white/70 px-3 py-1.5 text-left shadow-sm transition duration-200 hover:scale-[1.02] hover:shadow-[0_12px_28px_rgba(15,15,15,0.12)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#007AFF]/30 dark:border-white/10 dark:bg-[#2C2C2E]/80"
+                  className="flex items-center gap-2 sm:gap-3 rounded-full border border-white/60 bg-white/70 px-2 sm:px-3 py-1.5 text-left shadow-sm transition duration-200 hover:scale-[1.02] hover:shadow-[0_12px_28px_rgba(15,15,15,0.12)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#007AFF]/30 dark:border-white/10 dark:bg-[#2C2C2E]/80"
                   onClick={() => setShowDropdown((prev) => !prev)}
                   whileTap={{ scale: 0.98 }}
                 >
-                  <div className="hidden flex-col leading-tight sm:flex">
-                    <span className="text-sm font-semibold text-[#1C1C1E] dark:text-white">
+                  <div className="hidden flex-col leading-tight md:flex">
+                    <span className="text-sm font-semibold text-[#1C1C1E] dark:text-white truncate max-w-[120px]">
                       {user.email?.split('@')[0] ?? 'User'}
                     </span>
-                    <span className="text-xs text-[#8E8E93]">
+                    <span className="text-xs text-[#8E8E93] truncate max-w-[120px]">
                       {user.email}
                     </span>
                   </div>
-                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#007AFF]/10 text-sm font-semibold text-[#007AFF]">
+                  <div className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-full bg-[#007AFF]/10 text-xs sm:text-sm font-semibold text-[#007AFF]">
                     {initials}
                   </div>
                 </motion.button>
@@ -258,31 +258,6 @@ export default function Navbar() {
                           {user.email}
                         </p>
                       </div>
-                      <div className="mt-3 space-y-1">
-                        {navItems.map((item) => (
-                          <motion.button
-                            key={`menu-${item.href}`}
-                            type="button"
-                            onClick={() => {
-                              setShowDropdown(false)
-                              router.push(item.href)
-                            }}
-                            className={cn(
-                              'flex w-full items-center gap-2 rounded-2xl px-3 py-2 text-sm transition-colors duration-200',
-                              isActive(item)
-                                ? 'bg-[#007AFF]/10 text-[#007AFF]'
-                                : 'text-[#8E8E93] hover:bg-[#F2F2F7] hover:text-[#1C1C1E] dark:hover:bg-white/10 dark:hover:text-white'
-                            )}
-                            whileHover={{ scale: 1.01 }}
-                            whileTap={{ scale: 0.99 }}
-                          >
-                            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white/70 text-[#007AFF] dark:bg-white/10">
-                              {item.icon}
-                            </span>
-                            {item.label}
-                          </motion.button>
-                        ))}
-                      </div>
                       <motion.button
                         type="button"
                         onClick={handleLogout}
@@ -298,18 +273,18 @@ export default function Navbar() {
               </div>
             </div>
           ) : (
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               <Link
                 href="/login"
-                className="rounded-full border border-white/60 bg-white/70 px-4 py-2 text-sm font-medium text-[#1C1C1E] transition duration-200 hover:scale-[1.02] hover:text-[#007AFF] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#007AFF]/30 dark:border-white/10 dark:bg-[#2C2C2E]/80 dark:text-white"
+                className="rounded-full border border-white/60 bg-white/70 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-[#1C1C1E] transition duration-200 hover:scale-[1.02] hover:text-[#007AFF] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#007AFF]/30 dark:border-white/10 dark:bg-[#2C2C2E]/80 dark:text-white"
               >
                 Log in
               </Link>
               <Link
                 href="/signup"
-                className="rounded-full bg-[#007AFF] px-4 py-2 text-sm font-semibold text-white shadow-[0_14px_30px_rgba(0,122,255,0.25)] transition-transform duration-200 hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#007AFF]/40"
+                className="rounded-full bg-[#007AFF] px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold text-white shadow-[0_14px_30px_rgba(0,122,255,0.25)] transition-transform duration-200 hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#007AFF]/40 whitespace-nowrap"
               >
-                Create Account
+                Sign up
               </Link>
             </div>
           )}
@@ -317,13 +292,13 @@ export default function Navbar() {
           {user && (
             <button
               type="button"
-              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/60 bg-white/80 text-[#1C1C1E] transition duration-200 hover:scale-[1.05] hover:text-[#007AFF] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#007AFF]/30 md:hidden dark:border-white/10 dark:bg-[#2C2C2E]/80 dark:text-white"
+              className="inline-flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-full border border-white/60 bg-white/80 text-[#1C1C1E] transition duration-200 hover:scale-[1.05] hover:text-[#007AFF] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#007AFF]/30 lg:hidden dark:border-white/10 dark:bg-[#2C2C2E]/80 dark:text-white"
               onClick={() => setMobileOpen((prev) => !prev)}
             >
               {mobileOpen ? (
-                <XMarkIcon className="h-5 w-5" />
+                <XMarkIcon className="h-4 w-4 sm:h-5 sm:w-5" />
               ) : (
-                <Bars3BottomRightIcon className="h-5 w-5" />
+                <Bars3BottomRightIcon className="h-4 w-4 sm:h-5 sm:w-5" />
               )}
               <span className="sr-only">Toggle navigation</span>
             </button>

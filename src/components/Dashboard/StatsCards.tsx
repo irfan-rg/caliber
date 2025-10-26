@@ -164,7 +164,7 @@ const cardConfigs: CardConfig[] = [
 export default function StatsCards({ stats, previousStats }: StatsCardsProps) {
   return (
     <motion.div
-      className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5"
+      className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 xl:grid-cols-5"
       variants={motionVariants.stagger}
       initial="hidden"
       animate="show"
@@ -185,20 +185,20 @@ export default function StatsCards({ stats, previousStats }: StatsCardsProps) {
           <motion.article
             key={card.key}
             className={cn(
-              'relative overflow-hidden rounded-3xl border border-white/50 bg-white/80 p-5 shadow-[0_20px_48px_rgba(15,15,15,0.12)] backdrop-blur-2xl dark:border-white/10 dark:bg-[#1D1D1F]/85',
+              'relative overflow-hidden rounded-2xl sm:rounded-3xl border border-white/50 bg-white/80 p-4 sm:p-5 shadow-[0_20px_48px_rgba(15,15,15,0.12)] backdrop-blur-2xl dark:border-white/10 dark:bg-[#1D1D1F]/85',
               'transition duration-300 hover:-translate-y-1 hover:shadow-[0_32px_76px_rgba(15,15,15,0.18)]'
             )}
             style={{ backgroundImage: card.gradient }}
             variants={motionVariants.fadeUp}
           >
             <div className="flex items-center justify-between">
-              <div className={cn('flex h-11 w-11 items-center justify-center rounded-2xl bg-white/70 text-[#1C1C1E] shadow-inner dark:bg-white/10', card.accent)}>
+              <div className={cn('flex h-9 w-9 sm:h-11 sm:w-11 items-center justify-center rounded-xl sm:rounded-2xl bg-white/70 text-[#1C1C1E] shadow-inner dark:bg-white/10', card.accent)}>
                 {card.icon}
               </div>
               {trend && (
                 <span
                   className={cn(
-                    'flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium backdrop-blur-xl',
+                    'flex items-center gap-1 rounded-full px-2 sm:px-3 py-0.5 sm:py-1 text-[10px] sm:text-xs font-medium backdrop-blur-xl',
                     trend.direction === 'up'
                       ? 'bg-[#34C759]/15 text-[#34C759]'
                       : trend.direction === 'down'
@@ -207,31 +207,31 @@ export default function StatsCards({ stats, previousStats }: StatsCardsProps) {
                   )}
                 >
                   {trend.direction === 'up' && (
-                    <ArrowTrendingUpIcon className="h-3.5 w-3.5" />
+                    <ArrowTrendingUpIcon className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                   )}
                   {trend.direction === 'down' && (
-                    <ArrowTrendingDownIcon className="h-3.5 w-3.5" />
+                    <ArrowTrendingDownIcon className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                   )}
                   {trend.direction === 'flat' && (
-                    <MinusSmallIcon className="h-3.5 w-3.5" />
+                    <MinusSmallIcon className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                   )}
                   {trend.deltaLabel}
                 </span>
               )}
             </div>
 
-            <div className="mt-6 space-y-2">
-              <p className="text-sm font-medium tracking-tight text-[#1C1C1E]/80 dark:text-[#EBEBF5]/70">
+            <div className="mt-4 sm:mt-6 space-y-1 sm:space-y-2">
+              <p className="text-xs sm:text-sm font-medium tracking-tight text-[#1C1C1E]/80 dark:text-[#EBEBF5]/70">
                 {card.title}
               </p>
               <motion.p
-                className="text-3xl font-semibold tracking-tight text-[#1C1C1E] dark:text-white"
+                className="text-2xl sm:text-3xl font-semibold tracking-tight text-[#1C1C1E] dark:text-white"
                 layout
               >
                 <AnimatedNumber value={value} formatter={card.formatter} />
               </motion.p>
               {card.subtitle && (
-                <p className="text-xs uppercase tracking-[0.24em] text-[#8E8E93]">
+                <p className="text-[10px] sm:text-xs uppercase tracking-[0.24em] text-[#8E8E93]">
                   {card.subtitle}
                 </p>
               )}
