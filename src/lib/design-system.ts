@@ -19,18 +19,18 @@ export const palette = {
 
 export const glassSurface = {
   base:
-    "glass-card border border-white/40 bg-white/80 shadow-[0_18px_42px_rgba(15,15,15,0.12)] dark:border-white/10 dark:bg-[#2C2C2E]/80",
+    "glass-card border border-white/40 bg-white/80 shadow-[0_2px_8px_rgba(0,0,0,0.04)] dark:border-white/10 dark:bg-[#2C2C2E]/80 dark:shadow-[0_4px_12px_rgba(0,0,0,0.08)]",
   interactive:
-    "glass-card hover:-translate-y-0.5 hover:shadow-[0_24px_64px_rgba(15,15,15,0.18)] dark:hover:shadow-[0_30px_76px_rgba(0,0,0,0.6)]",
+    "glass-card hover:-translate-y-0.5 hover:shadow-[0_4px_16px_rgba(0,0,0,0.06)] dark:hover:shadow-[0_6px_20px_rgba(0,0,0,0.12)]",
 };
 
 export const surfaces = {
   panel:
-    "surface-card border border-black/5 bg-white/90 shadow-[0_12px_34px_rgba(15,15,15,0.12)] dark:border-white/5 dark:bg-[#1D1D1F]/80",
+    "surface-card border border-black/5 bg-white/90 shadow-[0_2px_8px_rgba(0,0,0,0.04)] dark:border-white/5 dark:bg-[#1D1D1F]/80 dark:shadow-[0_4px_12px_rgba(0,0,0,0.08)]",
   muted:
     "rounded-2xl border border-black/5 bg-white/70 backdrop-blur-xl dark:border-white/5 dark:bg-[#2C2C2E]/70",
   elevated:
-    "rounded-3xl border border-black/5 bg-white/95 shadow-[0_18px_42px_rgba(15,15,15,0.14)] dark:border-white/5 dark:bg-[#161618]/85",
+    "rounded-3xl border border-black/5 bg-white/95 shadow-[0_2px_8px_rgba(0,0,0,0.04)] dark:border-white/5 dark:bg-[#161618]/85 dark:shadow-[0_4px_12px_rgba(0,0,0,0.08)]",
 };
 
 const easeOutBack = [0.16, 1, 0.3, 1] as Transition["ease"];
@@ -76,9 +76,9 @@ export const chartConfig = {
 
 export const buttonStyles = {
   primary:
-    "relative inline-flex items-center justify-center rounded-full bg-[#007AFF] px-4 py-2 text-sm font-semibold text-white shadow-[0_14px_30px_rgba(0,122,255,0.25)] transition-transform duration-200 hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#007AFF]/40",
+    "relative inline-flex items-center justify-center rounded-full bg-[#007AFF] px-4 py-2 text-sm font-semibold text-white shadow-[0_4px_12px_rgba(0,122,255,0.2)] transition-transform duration-200 hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#007AFF]/40",
   secondary:
-    "relative inline-flex items-center justify-center rounded-full border border-black/10 bg-white/80 px-4 py-2 text-sm font-semibold text-[#1C1C1E] transition-transform duration-200 hover:scale-[1.02] hover:shadow-[0_14px_30px_rgba(28,28,30,0.12)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#007AFF]/20 dark:border-white/10 dark:bg-[#2C2C2E]/80 dark:text-white",
+    "relative inline-flex items-center justify-center rounded-full border border-black/10 bg-white/80 px-4 py-2 text-sm font-semibold text-[#1C1C1E] transition-transform duration-200 hover:scale-[1.02] hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#007AFF]/20 dark:border-white/10 dark:bg-[#2C2C2E]/80 dark:text-white",
 };
 
 export function cn(...inputs: ClassValue[]) {

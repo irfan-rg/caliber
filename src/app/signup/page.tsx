@@ -4,6 +4,7 @@ import { useState, FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
+import { useToast } from '@/components/ui/ToastProvider'
 
 export default function SignupPage() {
   const [email, setEmail] = useState('')
@@ -14,6 +15,7 @@ export default function SignupPage() {
   const [success, setSuccess] = useState(false)
   const router = useRouter()
   const supabase = createClient()
+  const { notify } = useToast()
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -22,14 +24,26 @@ export default function SignupPage() {
 
     // Validate passwords match
     if (password !== confirmPassword) {
-      setError('Passwords do not match')
+      const errorMsg = 'Passwords do not match'
+      setError(errorMsg)
+      notify({
+        variant: 'error',
+        title: 'Validation error',
+        description: errorMsg,
+      })
       setLoading(false)
       return
     }
 
     // Validate password length
     if (password.length < 6) {
-      setError('Password must be at least 6 characters long')
+      const errorMsg = 'Password must be at least 6 characters long'
+      setError(errorMsg)
+      notify({
+        variant: 'error',
+        title: 'Validation error',
+        description: errorMsg,
+      })
       setLoading(false)
       return
     }
@@ -45,17 +59,33 @@ export default function SignupPage() {
 
       if (signUpError) {
         setError(signUpError.message)
+        notify({
+          variant: 'error',
+          title: 'Signup failed',
+          description: signUpError.message,
+        })
         return
       }
 
       if (data.user) {
         // Check if email confirmation is required
         if (data.user.identities && data.user.identities.length === 0) {
-          setError('An account with this email already exists')
+          const errorMsg = 'An account with this email already exists'
+          setError(errorMsg)
+          notify({
+            variant: 'error',
+            title: 'Account exists',
+            description: errorMsg,
+          })
           return
         }
 
         setSuccess(true)
+        notify({
+          variant: 'success',
+          title: 'Account created!',
+          description: data.session ? 'Redirecting to dashboard...' : 'Please check your email to confirm your account.',
+        })
         
         // If email confirmation is not required, redirect to dashboard
         if (data.session) {
@@ -66,7 +96,13 @@ export default function SignupPage() {
         }
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An unexpected error occurred')
+      const errorMsg = err instanceof Error ? err.message : 'An unexpected error occurred'
+      setError(errorMsg)
+      notify({
+        variant: 'error',
+        title: 'Signup error',
+        description: errorMsg,
+      })
     } finally {
       setLoading(false)
     }
@@ -74,28 +110,32 @@ export default function SignupPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-md w-full space-y-8">
-          <div className="rounded-md bg-green-50 p-4">
-            <div className="flex">
-              <div className="ml-3">
-                <h3 className="text-sm font-medium text-green-800">
-                  Account Created Successfully!
-                </h3>
-                <div className="mt-2 text-sm text-green-700">
-                  <p>
-                    Please check your email to confirm your account. You&apos;ll be redirected to the dashboard shortly.
-                  </p>
-                </div>
-              </div>
+      <div className="relative min-h-screen overflow-hidden bg-[var(--color-background)] flex items-center justify-center px-4 sm:px-6 lg:px-8">
+        {/* Animated gradient orbs */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute -top-1/4 -left-1/4 w-96 h-96 bg-green-400/20 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob" />
+          <div className="absolute -top-1/4 -right-1/4 w-96 h-96 bg-blue-400/20 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-2000" />
+          <div className="absolute -bottom-1/4 left-1/2 w-96 h-96 bg-purple-400/20 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-4000" />
+        </div>
+
+        <div className="relative w-full max-w-md">
+          <div className="glass-card p-8 text-center">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[#34C759]/10 mb-4">
+              <svg className="w-8 h-8 text-[#34C759]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
             </div>
-          </div>
-          <div className="text-center">
+            <h3 className="text-2xl font-bold text-[var(--color-text)] mb-2">
+              Account Created!
+            </h3>
+            <p className="text-sm text-[var(--color-text-muted)] mb-6">
+              Please check your email to confirm your account. You&apos;ll be redirected to the dashboard shortly.
+            </p>
             <Link
               href="/login"
-              className="font-medium text-blue-600 hover:text-blue-500"
+              className="inline-flex rounded-xl bg-[#007AFF] px-6 py-3 text-sm font-semibold text-white shadow-[0_4px_12px_rgba(0,122,255,0.2)] transition-all duration-200 hover:scale-[1.02]"
             >
-              Go to Login Page
+              Go to Login
             </Link>
           </div>
         </div>
@@ -104,39 +144,35 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Create Your Account
+    <div className="relative min-h-screen overflow-hidden bg-[var(--color-background)] flex items-center justify-center px-4 sm:px-6 lg:px-8">
+      {/* Animated gradient orbs */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-1/4 -left-1/4 w-96 h-96 bg-blue-400/20 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob" />
+        <div className="absolute -top-1/4 -right-1/4 w-96 h-96 bg-purple-400/20 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-2000" />
+        <div className="absolute -bottom-1/4 left-1/2 w-96 h-96 bg-pink-400/20 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-4000" />
+      </div>
+
+      <div className="relative w-full max-w-md">
+        {/* Logo/Brand */}
+        <div className="mb-8 text-center">
+          <Link href="/" className="inline-flex items-center gap-2 mb-2">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#007AFF]/10 text-[#007AFF]">
+              <p className="text-3xl font-semibold">⚘</p>
+            </div>
+          </Link>
+          <h2 className="text-3xl font-bold text-[var(--color-text)] mb-2 tracking-tight">
+            Create your account
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Or{' '}
-            <Link
-              href="/login"
-              className="font-medium text-blue-600 hover:text-blue-500"
-            >
-              Sign In to Existing Account
-            </Link>
+          <p className="text-sm text-[var(--color-text-muted)]">
+            Get started with Caliber today
           </p>
         </div>
 
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          {error && (
-            <div className="rounded-md bg-red-50 p-4">
-              <div className="flex">
-                <div className="ml-3">
-                  <h3 className="text-sm font-medium text-red-800">
-                    {error}
-                  </h3>
-                </div>
-              </div>
-            </div>
-          )}
-
-          <div className="rounded-md shadow-sm space-y-4">
+        {/* Signup Form Card */}
+        <div className="glass-card p-8">
+          <form className="space-y-5" onSubmit={handleSubmit}>
             <div>
-              <label htmlFor="email-address" className="sr-only">
+              <label htmlFor="email-address" className="block text-sm font-medium text-[var(--color-text)] mb-2">
                 Email address
               </label>
               <input
@@ -147,13 +183,14 @@ export default function SignupPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                placeholder="Email address"
+                className="w-full px-4 py-3 rounded-xl border border-[var(--outline-muted)] bg-[var(--color-surface)] text-[var(--color-text)] placeholder-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[#007AFF]/30 focus:border-[#007AFF] transition"
+                placeholder="you@example.com"
                 disabled={loading}
               />
             </div>
+
             <div>
-              <label htmlFor="password" className="sr-only">
+              <label htmlFor="password" className="block text-sm font-medium text-[var(--color-text)] mb-2">
                 Password
               </label>
               <input
@@ -164,14 +201,15 @@ export default function SignupPage() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                placeholder="Password (min. 6 characters)"
+                className="w-full px-4 py-3 rounded-xl border border-[var(--outline-muted)] bg-[var(--color-surface)] text-[var(--color-text)] placeholder-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[#007AFF]/30 focus:border-[#007AFF] transition"
+                placeholder="Min. 6 characters"
                 disabled={loading}
               />
             </div>
+
             <div>
-              <label htmlFor="confirm-password" className="sr-only">
-                Confirm Password
+              <label htmlFor="confirm-password" className="block text-sm font-medium text-[var(--color-text)] mb-2">
+                Confirm password
               </label>
               <input
                 id="confirm-password"
@@ -181,23 +219,42 @@ export default function SignupPage() {
                 required
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                placeholder="Confirm password"
+                className="w-full px-4 py-3 rounded-xl border border-[var(--outline-muted)] bg-[var(--color-surface)] text-[var(--color-text)] placeholder-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[#007AFF]/30 focus:border-[#007AFF] transition"
+                placeholder="Confirm your password"
                 disabled={loading}
               />
             </div>
-          </div>
 
-          <div>
             <button
               type="submit"
               disabled={loading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full rounded-xl bg-[#007AFF] px-4 py-3 text-sm font-semibold text-white shadow-[0_4px_12px_rgba(0,122,255,0.2)] transition-all duration-200 hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#007AFF]/40 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
             >
-              {loading ? 'Creating account...' : 'Create account'}
+              {loading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Creating account...
+                </span>
+              ) : (
+                'Create account'
+              )}
             </button>
-          </div>
-        </form>
+          </form>
+        </div>
+
+        {/* Login link */}
+        <p className="mt-6 text-center text-sm text-[var(--color-text-muted)]">
+          Already have an account?{' '}
+          <Link
+            href="/login"
+            className="font-semibold text-[#007AFF] hover:underline"
+          >
+            Log in
+          </Link>
+        </p>
       </div>
     </div>
   )

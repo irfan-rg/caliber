@@ -38,7 +38,7 @@ const navItems: NavItem[] = [
     icon: <TableCellsIcon className="h-4 w-4" aria-hidden="true" />,
   },
   {
-    label: 'Config',
+    label: 'Configure',
     href: '/config',
     startsWith: '/config',
     icon: <Cog6ToothIcon className="h-4 w-4" aria-hidden="true" />,
@@ -167,7 +167,7 @@ export default function Navbar() {
           exit={{ opacity: 0, y: -20 }}
           transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
         >
-      <div className="glass-card flex w-full max-w-6xl items-center justify-between gap-2 sm:gap-6 rounded-3xl border border-white/50 px-3 sm:px-4 py-2 sm:py-3 backdrop-blur-xl shadow-[0_8px_24px_rgba(17,17,17,0.06)] dark:border-white/10 dark:shadow-[0_18px_42px_rgba(0,0,0,0.6)]">
+      <div className="flex w-full max-w-6xl items-center justify-between gap-2 sm:gap-6 rounded-3xl border border-white/50 bg-white/80 px-3 sm:px-4 py-2 sm:py-3 backdrop-blur-xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] dark:border-white/10 dark:bg-[#2C2C2E]/80 dark:shadow-[0_4px_12px_rgba(0,0,0,0.08)]">
         <div className="flex items-center gap-2 sm:gap-4 min-w-0">
           <Link
             href="/"
@@ -218,7 +218,7 @@ export default function Navbar() {
             <div className="flex items-center gap-2 sm:gap-3">
               <button
                 type="button"
-                className="hidden rounded-full bg-[#007AFF] px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold text-white shadow-[0_14px_30px_rgba(0,122,255,0.25)] transition-transform duration-200 hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#007AFF]/40 lg:inline-flex"
+                className="hidden rounded-full bg-[#007AFF] px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold text-white shadow-[0_4px_12px_rgba(0,122,255,0.2)] transition-transform duration-200 hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#007AFF]/40 lg:inline-flex"
                 onClick={() => router.push('/config')}
               >
                 Configure
@@ -226,7 +226,7 @@ export default function Navbar() {
               <div className="relative" ref={dropdownRef}>
                 <motion.button
                   type="button"
-                  className="flex items-center gap-2 sm:gap-3 rounded-full border border-white/60 bg-white/70 px-2 sm:px-3 py-1.5 text-left shadow-sm transition duration-200 hover:scale-[1.02] hover:shadow-[0_12px_28px_rgba(15,15,15,0.12)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#007AFF]/30 dark:border-white/10 dark:bg-[#2C2C2E]/80"
+                  className="flex items-center gap-2 sm:gap-3 rounded-full border border-white/60 bg-white/70 px-2 sm:px-3 py-1.5 text-left shadow-sm transition duration-200 hover:scale-[1.02] hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#007AFF]/30 dark:border-white/10 dark:bg-[#2C2C2E]/80"
                   onClick={() => setShowDropdown((prev) => !prev)}
                   whileTap={{ scale: 0.98 }}
                 >
@@ -248,7 +248,7 @@ export default function Navbar() {
                       key="dropdown"
                       {...dropdownMotion}
                       transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
-                      className="absolute right-0 top-14 w-64 rounded-3xl border border-white/40 bg-white/80 p-3 shadow-[0_24px_60px_rgba(15,15,15,0.18)] backdrop-blur-3xl dark:border-white/10 dark:bg-[#1D1D1F]/90"
+                      className="absolute right-0 top-14 w-64 rounded-3xl border border-white/30 bg-white/90 p-3 shadow-[0_4px_16px_rgba(0,0,0,0.06)] backdrop-blur-3xl dark:border-white/10 dark:bg-[#1D1D1F]/90 dark:shadow-[0_6px_20px_rgba(0,0,0,0.2)]"
                     >
                       <div className="rounded-2xl bg-white/70 p-3 dark:bg-white/5">
                         <p className="text-sm font-medium text-[#1C1C1E] dark:text-white">
@@ -273,16 +273,16 @@ export default function Navbar() {
               </div>
             </div>
           ) : (
-            <div className="flex items-center gap-2 sm:gap-3">
+            <div className="flex flex-wrap items-center justify-end gap-2">
               <Link
                 href="/login"
-                className="rounded-full border border-white/60 bg-white/70 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-[#1C1C1E] transition duration-200 hover:scale-[1.02] hover:text-[#007AFF] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#007AFF]/30 dark:border-white/10 dark:bg-[#2C2C2E]/80 dark:text-white"
+                className="flex flex-shrink-0 items-center rounded-full border border-white/60 bg-white/70 px-3 py-1 text-xs font-medium text-[#1C1C1E] transition duration-200 hover:scale-[1.02] hover:text-[#007AFF] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#007AFF]/30 sm:px-4 sm:py-1.5 sm:text-sm dark:border-white/10 dark:bg-[#2C2C2E]/80 dark:text-white"
               >
                 Log in
               </Link>
               <Link
                 href="/signup"
-                className="rounded-full bg-[#007AFF] px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold text-white shadow-[0_14px_30px_rgba(0,122,255,0.25)] transition-transform duration-200 hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#007AFF]/40 whitespace-nowrap"
+                className="flex flex-shrink-0 items-center rounded-full bg-[#007AFF] px-3 py-1 text-xs font-semibold text-white shadow-[0_4px_12px_rgba(0,122,255,0.2)] transition-transform duration-200 hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#007AFF]/40 sm:px-4 sm:py-1.5 sm:text-sm"
               >
                 Sign up
               </Link>
@@ -314,7 +314,7 @@ export default function Navbar() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -12 }}
             transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
-            className="mx-auto mt-3 w-full max-w-6xl rounded-3xl border border-white/50 bg-white/80 p-4 shadow-[0_24px_60px_rgba(15,15,15,0.14)] backdrop-blur-2xl dark:border-white/10 dark:bg-[#1D1D1F]/90"
+            className="mx-auto mt-3 w-full max-w-6xl rounded-3xl border border-white/50 bg-white/90 p-4 shadow-[0_4px_16px_rgba(0,0,0,0.06)] backdrop-blur-2xl dark:border-white/10 dark:bg-[#1D1D1F]/90 dark:shadow-[0_6px_20px_rgba(0,0,0,0.2)]"
           >
             <div className="space-y-2">
               {navItems.map((item) => {

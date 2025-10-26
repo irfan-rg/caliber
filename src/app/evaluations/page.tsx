@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { createClient } from '@/lib/supabase/client'
+import { useToast } from '@/components/ui/ToastProvider'
 import EvalList, { type EvaluationRow } from '@/components/Evaluations/EvalList'
 import { TableSkeleton } from '@/components/Skeletons/TableSkeleton'
 import { StatCardSkeletonGrid } from '@/components/Skeletons/StatCardSkeleton'
@@ -24,6 +25,7 @@ export default function EvaluationsPage() {
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false) // Track if we've loaded before
   const router = useRouter()
   const supabase = createClient()
+  const { notify } = useToast()
   const initialLoad = useRef(true)
 
   const loadEvaluations = useCallback(async () => {
@@ -49,6 +51,11 @@ export default function EvaluationsPage() {
       }
     } catch (error) {
       console.error('Error loading evaluations:', error)
+      notify({
+        variant: 'error',
+        title: 'Failed to load evaluations',
+        description: 'Unable to fetch evaluation data. Please try refreshing.',
+      })
     } finally {
       if (!cachedResponse?.fromCache) setLoading(false) // Only for fresh data
       if (initialLoad.current) {
@@ -56,7 +63,7 @@ export default function EvaluationsPage() {
         setHasLoadedOnce(true)
       }
     }
-  }, [page, hasLoadedOnce, evaluations.length])
+  }, [page, hasLoadedOnce, evaluations.length, notify])
 
   useEffect(() => {
     const bootstrap = async () => {
@@ -162,7 +169,7 @@ export default function EvaluationsPage() {
           </div>
           <Link
             href="/config"
-            className="rounded-full bg-[#007AFF] px-4 sm:px-5 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold text-white shadow-[0_14px_30px_rgba(0,122,255,0.25)] transition-transform duration-200 hover:scale-[1.02]"
+            className="rounded-full bg-[#007AFF] px-4 sm:px-5 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold text-white shadow-[0_4px_12px_rgba(0,122,255,0.2)] transition-transform duration-200 hover:scale-[1.02]"
           >
             Configure Settings
           </Link>

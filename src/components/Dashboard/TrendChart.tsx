@@ -53,7 +53,7 @@ function CustomTooltip({
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: -4, scale: 0.97 }}
       transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
-      className="glass-card flex flex-col gap-2 rounded-2xl px-4 py-3 text-sm shadow-[0_18px_38px_rgba(15,15,15,0.16)]"
+      className="glass-card flex flex-col gap-2 rounded-2xl px-4 py-3 text-sm shadow-[0_2px_8px_rgba(0,0,0,0.04)]"
     >
       <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#8E8E93]">
         {label}
@@ -109,7 +109,7 @@ export default function TrendChart({ data }: TrendChartProps) {
   return (
     <motion.section
       className={cn(
-        'relative overflow-hidden rounded-2xl sm:rounded-3xl border border-white/60 bg-white/90 p-4 sm:p-6 shadow-[0_24px_60px_rgba(15,15,15,0.14)] backdrop-blur-3xl',
+        'relative overflow-hidden rounded-2xl sm:rounded-3xl border border-white/60 bg-white/90 p-4 sm:p-6 shadow-[0_2px_8px_rgba(0,0,0,0.04)] backdrop-blur-3xl',
         'dark:border-white/10 dark:bg-[#1D1D1F]/85'
       )}
       variants={motionVariants.fadeUp}

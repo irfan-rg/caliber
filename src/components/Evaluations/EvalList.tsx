@@ -65,7 +65,7 @@ export default function EvalList({
 
 	return (
 		<motion.section
-			className="relative overflow-hidden rounded-2xl sm:rounded-3xl border border-white/60 bg-white/85 shadow-[0_24px_60px_rgba(15,15,15,0.12)] backdrop-blur-3xl dark:border-white/10 dark:bg-[#1D1D1F]/85"
+			className="relative overflow-hidden rounded-2xl sm:rounded-3xl border border-white/60 bg-white/85 shadow-[0_2px_8px_rgba(0,0,0,0.04)] backdrop-blur-3xl dark:border-white/10 dark:bg-[#1D1D1F]/85 dark:shadow-[0_4px_12px_rgba(0,0,0,0.08)]"
 			variants={motionVariants.fadeUp}
 			initial="hidden"
 			animate="show"
@@ -188,7 +188,7 @@ export default function EvalList({
 							'rounded-full px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold transition',
 							page === totalPages || loading
 								? 'cursor-not-allowed bg-white/50 text-[#C8C8CC] dark:bg-white/5'
-								: 'bg-[#007AFF] text-white shadow-[0_12px_32px_rgba(0,122,255,0.25)] hover:scale-[1.02]'
+								: 'bg-[#007AFF] text-white shadow-[0_4px_12px_rgba(0,122,255,0.2)] hover:scale-[1.02]'
 						)}
 					>
 						Next

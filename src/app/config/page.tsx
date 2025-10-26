@@ -223,7 +223,7 @@ export default function ConfigPage() {
                   key={option.value}
                   type="button"
                   onClick={() => updateConfig('run_policy', option.value)}
-                  className="relative flex items-center justify-between rounded-2xl border border-white/50 bg-white/70 px-5 py-4 text-left transition hover:shadow-[0_18px_42px_rgba(15,15,15,0.16)] dark:border-white/10 dark:bg-[#1D1D1F]/80"
+                  className="relative flex items-center justify-between rounded-2xl border border-white/50 bg-white/70 px-5 py-4 text-left transition hover:shadow-md dark:border-white/10 dark:bg-[#1D1D1F]/80"
                   whileHover={{ scale: 1.01 }}
                   whileTap={{ scale: 0.98 }}
                 >
@@ -382,7 +382,7 @@ export default function ConfigPage() {
           <motion.button
             type="submit"
             disabled={saving}
-            className="relative inline-flex items-center gap-2 rounded-full bg-[#007AFF] px-5 py-2 text-sm font-semibold text-white shadow-[0_16px_34px_rgba(0,122,255,0.28)] transition-transform duration-200 hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-50"
+            className="relative inline-flex items-center gap-2 rounded-full bg-[#007AFF] px-5 py-2 text-sm font-semibold text-white shadow-[0_4px_12px_rgba(0,122,255,0.2)] transition-transform duration-200 hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-50"
             whileTap={{ scale: 0.97 }}
           >
             <span>{saving ? 'Saving…' : 'Save configuration'}</span>

@@ -185,8 +185,8 @@ export default function StatsCards({ stats, previousStats }: StatsCardsProps) {
           <motion.article
             key={card.key}
             className={cn(
-              'relative overflow-hidden rounded-2xl sm:rounded-3xl border border-white/50 bg-white/80 p-4 sm:p-5 shadow-[0_20px_48px_rgba(15,15,15,0.12)] backdrop-blur-2xl dark:border-white/10 dark:bg-[#1D1D1F]/85',
-              'transition duration-300 hover:-translate-y-1 hover:shadow-[0_32px_76px_rgba(15,15,15,0.18)]'
+              'relative overflow-hidden rounded-2xl sm:rounded-3xl border border-white/50 bg-white/80 p-4 sm:p-5 shadow-[0_2px_8px_rgba(0,0,0,0.04)] backdrop-blur-2xl dark:border-white/10 dark:bg-[#1D1D1F]/85 dark:shadow-[0_4px_12px_rgba(0,0,0,0.08)]',
+              'transition duration-300 hover:-translate-y-1 hover:shadow-[0_4px_16px_rgba(0,0,0,0.06)]'
             )}
             style={{ backgroundImage: card.gradient }}
             variants={motionVariants.fadeUp}

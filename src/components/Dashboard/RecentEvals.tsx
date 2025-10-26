@@ -59,7 +59,7 @@ export default function RecentEvals({ evals }: RecentEvalsProps) {
 
   return (
     <motion.section
-      className="relative overflow-hidden rounded-2xl sm:rounded-3xl border border-white/60 bg-white/85 shadow-[0_24px_60px_rgba(15,15,15,0.12)] backdrop-blur-3xl dark:border-white/10 dark:bg-[#1D1D1F]/85"
+      className="relative overflow-hidden rounded-2xl sm:rounded-3xl border border-white/60 bg-white/85 shadow-[0_2px_8px_rgba(0,0,0,0.04)] backdrop-blur-3xl dark:border-white/10 dark:bg-[#1D1D1F]/85 dark:shadow-[0_4px_12px_rgba(0,0,0,0.08)]"
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.34, ease: [0.16, 1, 0.3, 1] }}

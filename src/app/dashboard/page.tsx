@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { createClient } from '@/lib/supabase/client'
+import { useToast } from '@/components/ui/ToastProvider'
 import StatsCards from '@/components/Dashboard/StatsCards'
 import TrendChart from '@/components/Dashboard/TrendChart'
 import RecentEvals from '@/components/Dashboard/RecentEvals'
@@ -49,6 +50,7 @@ export default function DashboardPage() {
   const previousStats30DayRef = useRef<StatsData | null>(null)
   const router = useRouter()
   const supabase = createClient()
+  const { notify } = useToast()
 
   // Show skeleton only when loading and we don't have any previous data
   const showInitialSkeleton = loading && !stats
@@ -100,11 +102,16 @@ export default function DashboardPage() {
       }
     } catch (error) {
       console.error('Error loading dashboard:', error)
+      notify({
+        variant: 'error',
+        title: 'Failed to load dashboard',
+        description: 'Unable to fetch dashboard data. Please try refreshing.',
+      })
     } finally {
       if (!fromCache) setLoading(false) // Only for fresh data
       setHasLoadedOnce(true)
     }
-  }, [days, hasLoadedOnce, stats, fromCache])
+  }, [days, hasLoadedOnce, stats, fromCache, notify])
 
   useEffect(() => {
     const bootstrap = async () => {
@@ -226,7 +233,7 @@ export default function DashboardPage() {
                   {isActive && (
                     <motion.span
                       layoutId="range-pill"
-                      className="absolute inset-0 -z-10 rounded-full bg-[#007AFF] shadow-[0_12px_30px_rgba(0,122,255,0.28)]"
+                      className="absolute inset-0 -z-10 rounded-full bg-[#007AFF] shadow-[0_4px_12px_rgba(0,122,255,0.2)]"
                       transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
                     />
                   )}
