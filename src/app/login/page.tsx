@@ -25,7 +25,6 @@ export default function LoginPage() {
       })
 
       if (signInError) {
-        setError(signInError.message)
         notify({
           variant: 'error',
           title: 'Login failed',
@@ -47,7 +46,6 @@ export default function LoginPage() {
       }, 500)
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred'
-      setError(errorMessage)
       notify({
         variant: 'error',
         title: 'Login error',
