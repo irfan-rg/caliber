@@ -111,10 +111,21 @@ function generatePiiTokens() {
   }
 }
 
-// Generate timestamp in last 30 days (more recent = more data)
-function generateTimestamp() {
+// Generate timestamp - optimized for dashboard testing
+// 70% of data in last 7 days (for 7-day view)
+// 30% of data in 8-30 days (for 30-day view comparison)
+function generateTimestamp(force7Days = false) {
   const now = new Date()
-  const daysAgo = Math.pow(Math.random(), 2) * 30 // Bias towards recent dates
+  let daysAgo
+  
+  if (force7Days) {
+    // For 7-day data: spread across last 7 days, biased towards recent
+    daysAgo = Math.pow(Math.random(), 2) * 7
+  } else {
+    // For 30-day data: spread across 8-30 days ago
+    daysAgo = 8 + Math.pow(Math.random(), 1.5) * 22
+  }
+  
   const timestamp = new Date(now - daysAgo * 24 * 60 * 60 * 1000)
   return timestamp.toISOString()
 }
@@ -328,14 +339,19 @@ async function ensureConfig(userId) {
 async function generateEvaluations(userId, count) {
   console.log(`\n📊 Generating ${count} evaluation records...`)
   console.log(`   Using User ID: ${userId}`)
+  console.log(`   📅 70% in last 7 days, 30% in 8-30 days ago`)
   
   const evaluations = []
   const batchSize = 50
   let created = 0
+  
+  // Split data: 70% recent (last 7 days), 30% older (for 30-day comparison)
+  const recentCount = Math.floor(count * 0.7)
 
   for (let i = 0; i < count; i++) {
     const promptIndex = Math.floor(Math.random() * PROMPTS.length)
     const score = generateScore()
+    const isRecent = i < recentCount
     
     evaluations.push({
       user_id: userId, // ✅ Using authenticated user's ID
@@ -346,7 +362,7 @@ async function generateEvaluations(userId, count) {
       latency_ms: generateLatency(),
       flags: generateFlags(score),
       pii_tokens_redacted: generatePiiTokens(),
-      created_at: generateTimestamp()
+      created_at: generateTimestamp(isRecent) // 70% in last 7 days, 30% older
     })
 
     // Insert in batches
