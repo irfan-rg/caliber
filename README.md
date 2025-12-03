@@ -180,6 +180,51 @@ npm run dev
 
 Visit http://localhost:3000
 
+## Database Seeding
+
+### Overview
+The seed script (`scripts/seed.js`) generates realistic test data to populate your dashboard with meaningful analytics. It creates a test user account and 500-1000 evaluation records with diverse performance metrics.
+
+### Smart Timestamp Distribution
+The seed script uses **intelligent timestamp distribution** to ensure all dashboard time ranges (7-day, 14-day, 30-day) always show data, regardless of when you run it:
+
+- **50% of evaluations** are created within the last 7 days
+- **25% of evaluations** are created 7-14 days ago  
+- **25% of evaluations** are created 14-30 days ago
+
+This distribution is **relative to the current date**, so running the script on December 15th will create data that works perfectly for all time ranges. No need to reseed every few weeks!
+
+### Generated Data
+The script creates realistic AI evaluation data including:
+- **Prompts & Responses**: 15+ diverse AI interaction examples
+- **Scores**: Realistic distribution (70-95% success rate, occasional failures)
+- **Latency**: Varied response times (200-3000ms with realistic distribution)
+- **Flags**: Error states, timeouts, and warnings
+- **PII Tokens**: Simulated redaction counts
+
+### Running the Seed Script
+```bash
+# Ensure environment variables are set
+node scripts/seed.js
+```
+
+**What it does:**
+1. Authenticates or creates test user (`test@example.com` / `Test123!`)
+2. Cleans up any existing data for the test user
+3. Creates user configuration settings
+4. Generates 500-1000 evaluation records with smart distribution
+5. Verifies data integrity and displays statistics
+
+### Test Credentials
+After seeding, you can log in with:
+- **Email:** `test@example.com`
+- **Password:** `Test123!`
+
+### Troubleshooting
+- **"Missing Supabase environment variables"**: Ensure `.env.local` exists with `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- **"RLS policies not working"**: Check Supabase dashboard → Authentication → Settings (disable email confirmation)
+- **"User creation failed"**: Verify Supabase project allows user registration
+
 ## Database Schema
 
 ### Tables
