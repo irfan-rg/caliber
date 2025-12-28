@@ -111,25 +111,10 @@ function generatePiiTokens() {
   }
 }
 
-// Generate timestamp - SMART DISTRIBUTION across all time ranges
-// 50% in last 7 days, 25% in 7-14 days, 25% in 14-30 days
-// This ensures 7-day, 14-day, and 30-day views ALL have data
+// Generate timestamp in last 30 days (more recent = more data)
 function generateTimestamp(index, total) {
   const now = new Date()
-  const rand = Math.random()
-  
-  let daysAgo
-  if (rand < 0.5) {
-    // 50% within last 7 days (ensures 7-day view always has data)
-    daysAgo = Math.random() * 7
-  } else if (rand < 0.75) {
-    // 25% within 7-14 days (ensures 14-day view has data)
-    daysAgo = 7 + Math.random() * 7
-  } else {
-    // 25% within 14-30 days (ensures 30-day view has data)
-    daysAgo = 14 + Math.random() * 16
-  }
-  
+  const daysAgo = Math.pow(Math.random(), 2) * 30 // Bias towards recent dates
   const timestamp = new Date(now - daysAgo * 24 * 60 * 60 * 1000)
   return timestamp.toISOString()
 }
