@@ -1,25 +1,28 @@
 const { createClient } = require('@supabase/supabase-js')
 require('dotenv').config({ path: '.env.local' })
 
-// Initialize Supabase client
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+const demoSeed = process.env.DEMO_SEED || 'caliber-demo'
 
 if (!supabaseUrl || !supabaseKey) {
-  console.error('❌ Error: Missing Supabase environment variables')
-  console.error('Please ensure NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY are set in .env.local')
+  console.error('❌ Missing Supabase environment variables')
+  console.error('Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in .env.local (or GitHub secrets).')
   process.exit(1)
 }
 
-const supabase = createClient(supabaseUrl, supabaseKey)
+const userClient = createClient(supabaseUrl, supabaseKey)
+const adminClient = supabaseServiceRoleKey
+  ? createClient(supabaseUrl, supabaseServiceRoleKey)
+  : null
 
-// Test user credentials
+// Portfolio/demo seed user
 const TEST_USER = {
   email: 'test@example.com',
   password: 'Test123!'
 }
 
-// Realistic AI prompts
 const PROMPTS = [
   'What is the capital of France?',
   'Explain quantum computing in simple terms.',
@@ -31,471 +34,362 @@ const PROMPTS = [
   'Explain the concept of machine learning.',
   'What are the best practices for API design?',
   'How does photosynthesis work?',
-  'What is the meaning of life according to philosophy?',
-  'Describe the water cycle in nature.',
   'What are the main features of TypeScript?',
   'How can I improve my productivity at work?',
   'Explain the theory of relativity in layman\'s terms.'
 ]
 
-// Corresponding responses
 const RESPONSES = [
-  'The capital of France is Paris, which is located in the north-central part of the country.',
-  'Quantum computing uses quantum bits (qubits) that can exist in multiple states simultaneously, allowing for parallel processing of information at scales impossible for classical computers.',
-  'Here\'s a Python function:\n\ndef fibonacci(n):\n    if n <= 1:\n        return n\n    return fibonacci(n-1) + fibonacci(n-2)',
-  'Regular exercise improves cardiovascular health, strengthens muscles, boosts mental health, helps maintain healthy weight, and increases energy levels.',
-  'Climate change involves rising global temperatures, melting ice caps, extreme weather events, and impacts on ecosystems. It\'s primarily driven by human activities releasing greenhouse gases.',
-  'To make chocolate chip cookies: Mix butter, sugar, eggs, and vanilla. Add flour, baking soda, and salt. Fold in chocolate chips. Bake at 375°F for 10-12 minutes.',
-  'React uses a virtual DOM and JSX syntax, while Vue has a template-based approach. React has a larger ecosystem, while Vue is often considered easier to learn for beginners.',
-  'Machine learning is a subset of AI where computers learn from data patterns without explicit programming. Models improve through experience, making predictions or decisions based on input data.',
-  'API best practices include: RESTful design, proper HTTP methods, versioning, authentication, rate limiting, clear documentation, consistent naming, and comprehensive error handling.',
-  'Photosynthesis is the process where plants convert light energy into chemical energy. Chlorophyll absorbs sunlight, and plants use CO2 and water to produce glucose and oxygen.',
-  'Philosophers have debated this for millennia. Perspectives range from finding purpose through relationships and experiences, to existentialist views that we create our own meaning.',
-  'The water cycle involves evaporation from oceans and lakes, condensation into clouds, precipitation as rain or snow, and collection back into bodies of water. This cycle continuously recycles Earth\'s water.',
-  'TypeScript adds static typing to JavaScript, providing better IDE support, compile-time error checking, interfaces, generics, and improved code documentation through type annotations.',
-  'Productivity tips: prioritize tasks, use time-blocking, minimize distractions, take regular breaks, set clear goals, delegate when possible, and maintain work-life balance.',
-  'Einstein\'s theory states that space and time are interconnected as spacetime. Massive objects curve spacetime, and this curvature is what we experience as gravity. Time also runs slower in stronger gravitational fields.'
+  'The capital of France is Paris.',
+  'Quantum computing uses qubits that can represent multiple states at once, enabling certain computations to be much faster than classical computers.',
+  "def fibonacci(n):\n    if n <= 1:\n        return n\n    a, b = 0, 1\n    for _ in range(n):\n        a, b = b, a + b\n    return a",
+  'Regular exercise improves cardiovascular health, strength, energy, and mood.',
+  'Climate change is driven by greenhouse gas emissions, leading to warming, extreme weather, and ecosystem impacts.',
+  'Mix wet ingredients, add dry ingredients, fold in chocolate chips, then bake until golden.',
+  'React emphasizes component state and JSX, while Vue offers a template-first approach; both are popular UI frameworks.',
+  'Machine learning is a method where models learn patterns from data to make predictions or decisions.',
+  'Good API design includes consistent naming, correct HTTP semantics, pagination, auth, and clear errors.',
+  'Photosynthesis converts light, water, and CO2 into glucose and oxygen.',
+  'TypeScript adds static typing and tooling on top of JavaScript.',
+  'Use prioritization, time-blocking, fewer context switches, and clear goals to improve productivity.',
+  'Relativity describes how time and space are linked; gravity is the curvature of spacetime.'
 ]
 
-// Generate random score with realistic distribution
-function generateScore() {
-  const rand = Math.random()
-  if (rand < 0.05) {
-    // 5% failures (20-60)
-    return Math.floor(Math.random() * 41) + 20
-  } else if (rand < 0.15) {
-    // 10% marginal (60-70)
-    return Math.floor(Math.random() * 11) + 60
-  } else {
-    // 85% good scores (70-95)
-    return Math.floor(Math.random() * 26) + 70
+function hashStringToUint32(input) {
+  let hash = 2166136261
+  for (let i = 0; i < input.length; i++) {
+    hash ^= input.charCodeAt(i)
+    hash = Math.imul(hash, 16777619)
+  }
+  return hash >>> 0
+}
+
+function mulberry32(seed) {
+  let t = seed >>> 0
+  return function next() {
+    t += 0x6D2B79F5
+    let x = t
+    x = Math.imul(x ^ (x >>> 15), x | 1)
+    x ^= x + Math.imul(x ^ (x >>> 7), x | 61)
+    return ((x ^ (x >>> 14)) >>> 0) / 4294967296
   }
 }
 
-// Generate random latency with realistic distribution
-function generateLatency() {
-  const rand = Math.random()
-  if (rand < 0.7) {
-    // 70% fast responses (200-800ms)
-    return Math.floor(Math.random() * 600) + 200
-  } else if (rand < 0.95) {
-    // 25% medium responses (800-1500ms)
-    return Math.floor(Math.random() * 700) + 800
-  } else {
-    // 5% slow responses (1500-3000ms)
-    return Math.floor(Math.random() * 1500) + 1500
-  }
+// Deterministic RNG for consistent demo charts.
+// We still anchor timestamps to "today" so the window moves forward, but the shape stays consistent.
+let rng = mulberry32(hashStringToUint32(demoSeed))
+
+function reseedRngForToday() {
+  const todayKey = new Date().toISOString().slice(0, 10) // YYYY-MM-DD
+  rng = mulberry32(hashStringToUint32(`${demoSeed}:${todayKey}`))
 }
 
-// Generate flags
-function generateFlags(score) {
-  if (score < 50 && Math.random() < 0.5) {
-    return { error: true }
-  } else if (score < 70 && Math.random() < 0.3) {
-    return { timeout: true }
-  } else if (Math.random() < 0.1) {
-    return { warning: 'slow_response' }
-  }
+function clamp(number, min, max) {
+  return Math.min(max, Math.max(min, number))
+}
+
+function randomNormal(mean, stdDev) {
+  // Box–Muller transform
+  let u = 0
+  let v = 0
+  while (u === 0) u = rng()
+  while (v === 0) v = rng()
+  const z = Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v)
+  return mean + z * stdDev
+}
+
+function generateScore(dayIndexFromOldest) {
+  // Mild weekly seasonality + noise; stays mostly 70-95 with occasional dips.
+  const seasonal = 3.5 * Math.sin((2 * Math.PI * dayIndexFromOldest) / 7)
+  const mean = 79 + seasonal
+  const score = randomNormal(mean, 7)
+  return Math.round(clamp(score, 15, 98))
+}
+
+function generateLatency(dayIndexFromOldest) {
+  // Slight trend/seasonality + noise
+  const seasonal = 80 * Math.cos((2 * Math.PI * dayIndexFromOldest) / 10)
+  const mean = 760 + seasonal
+  const latency = randomNormal(mean, 260)
+  return Math.round(clamp(latency, 120, 3200))
+}
+
+function generateFlags(score, latencyMs) {
+  if (score < 50) return { error: true }
+  if (score < 70 && Math.random() < 0.25) return { timeout: true }
+  if (latencyMs > 1800 && Math.random() < 0.25) return { warning: 'slow_response' }
   return null
 }
 
-// Generate PII tokens redacted
 function generatePiiTokens() {
-  const rand = Math.random()
-  if (rand < 0.8) {
-    return 0
-  } else if (rand < 0.95) {
-    return Math.floor(Math.random() * 3) + 1 // 1-3
-  } else {
-    return Math.floor(Math.random() * 3) + 3 // 3-5
+  const rand = rng()
+  if (rand < 0.82) return 0
+  if (rand < 0.95) return Math.floor(rng() * 3) + 1
+  return Math.floor(rng() * 3) + 3
+}
+
+function utcStartOfDay(date) {
+  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 0, 0, 0, 0))
+}
+
+function randomTimestampWithinUtcDay(utcDayStart) {
+  // Keep times safely inside the day to avoid timezone edge artifacts
+  const minSeconds = 60 * 60 * 2 // 02:00 UTC
+  const maxSeconds = 60 * 60 * 22 // 22:00 UTC
+  const seconds = Math.floor(minSeconds + rng() * (maxSeconds - minSeconds))
+  return new Date(utcDayStart.getTime() + seconds * 1000)
+}
+
+function computeDailyCounts(totalEvaluations, days) {
+  // Goal:
+  // - Clearly different dataset sizes for 7/14/30 day views
+  // - More activity in recent days (portfolio looks "alive")
+  // - Non-flat daily chart (seasonality + mild noise)
+
+  // IMPORTANT: The dashboard trend chart only renders days that have at least 1 evaluation.
+  // If some days have 0, you'll see fewer points (e.g. 7-day shows 2 points).
+  // So we guarantee a small minimum per day and distribute the remainder.
+
+  // For demo charts we want smooth lines, so ensure enough events per day.
+  // With daily reseeds this keeps charts consistent and avoids noisy "single point" days.
+  const minPerDay = totalEvaluations >= days ? 8 : 0
+  const baselineTotal = minPerDay * days
+  let remaining = Math.max(0, totalEvaluations - baselineTotal)
+
+  const weights = []
+  for (let offsetFromNow = days - 1; offsetFromNow >= 0; offsetFromNow--) {
+    // offsetFromNow: 29 (oldest) ... 0 (today)
+    const recency = Math.exp(-offsetFromNow / 9) // heavier recent
+    const weekly = 1 + 0.18 * Math.sin((2 * Math.PI * (days - 1 - offsetFromNow)) / 7)
+    const noise = 1 + (rng() - 0.5) * 0.06
+    weights.push(Math.max(0.05, recency * weekly * noise))
   }
+
+  const sum = weights.reduce((a, b) => a + b, 0)
+  const rawCounts = weights.map(w => (sum === 0 ? 0 : (w / sum) * remaining))
+
+  const counts = rawCounts.map(c => Math.floor(c) + minPerDay)
+  let remainder = totalEvaluations - counts.reduce((a, b) => a + b, 0)
+
+  // Distribute remainder to the most recent days
+  let i = counts.length - 1
+  while (remainder > 0) {
+    counts[i] += 1
+    remainder -= 1
+    i -= 1
+    if (i < 0) i = counts.length - 1
+  }
+
+  return counts
 }
 
-// Generate timestamp in last 30 days (more recent = more data)
-function generateTimestamp(index, total) {
-  const now = new Date()
-  const daysAgo = Math.pow(Math.random(), 2) * 30 // Bias towards recent dates
-  const timestamp = new Date(now - daysAgo * 24 * 60 * 60 * 1000)
-  return timestamp.toISOString()
-}
+async function ensureTestUser() {
+  console.log('🔐 Authenticating demo user...')
 
-// ============ IMPROVED USER AUTHENTICATION ============
-
-async function ensureTestUserAuthenticated() {
-  console.log('🔍 Authenticating test user...')
-  
-  try {
-    // First, try to sign in
-    const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+  // If we have the service role key, ensure the demo user exists and is confirmed.
+  if (adminClient) {
+    const createResult = await adminClient.auth.admin.createUser({
       email: TEST_USER.email,
-      password: TEST_USER.password
+      password: TEST_USER.password,
+      email_confirm: true,
+      user_metadata: { full_name: 'Test User' },
     })
 
-    if (signInData?.user) {
-      console.log('✅ Successfully authenticated!')
-      console.log(`   Email: ${signInData.user.email}`)
-      console.log(`   User ID: ${signInData.user.id}`)
-      return signInData.user
-    }
-
-    // If sign in failed, try to create the user
-    if (signInError) {
-      console.log('📝 User not found, creating new test user...')
-      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-        email: TEST_USER.email,
-        password: TEST_USER.password,
-        options: {
-          data: {
-            full_name: 'Test User'
-          }
-        }
-      })
-
-      if (signUpError) {
-        console.error('\n❌ Could not create user:', signUpError.message)
-        console.error('\n💡 Make sure:')
-        console.error('   1. Email confirmation is disabled in Supabase (Authentication > Settings)')
-        console.error('   2. The email format is valid')
-        console.error('   3. Password meets requirements (min 6 characters)')
-        throw signUpError
-      }
-
-      if (signUpData?.user) {
-        console.log('✅ Test user created successfully!')
-        
-        // Sign in immediately with the new user
-        const { data: newSignInData, error: newSignInError } = await supabase.auth.signInWithPassword({
-          email: TEST_USER.email,
-          password: TEST_USER.password
-        })
-
-        if (newSignInError || !newSignInData?.user) {
-          console.error('⚠️  User created but auto sign-in failed.')
-          console.error('   Please run the script again.')
-          throw new Error('User created, please run script again')
-        }
-
-        console.log('✅ Authenticated with new user!')
-        console.log(`   User ID: ${newSignInData.user.id}`)
-        return newSignInData.user
+    // Ignore "already exists" errors; we just need a user present.
+    if (createResult.error) {
+      const message = String(createResult.error.message || '')
+      if (!message.toLowerCase().includes('already')) {
+        console.error('❌ Admin createUser failed:', createResult.error.message)
+        throw createResult.error
       }
     }
-
-    throw new Error('Failed to authenticate user')
-  } catch (error) {
-    throw error
   }
+
+  // Always sign in via anon key to get the user's ID (and to verify the login works for the demo).
+  const { data: signInData, error: signInError } = await userClient.auth.signInWithPassword({
+    email: TEST_USER.email,
+    password: TEST_USER.password
+  })
+
+  if (signInError || !signInData?.user) {
+    console.error('❌ Demo sign-in failed:', signInError?.message)
+    console.error('💡 If this is a fresh Supabase project, disable email confirmation OR set SUPABASE_SERVICE_ROLE_KEY so the script can confirm the user.')
+    throw signInError || new Error('Demo sign-in failed')
+  }
+
+  return signInData.user
 }
 
-// ============ VERIFY RLS ACCESS ============
-
-async function verifyRLSAccess(userId) {
-  console.log('\n🔍 Verifying RLS access...')
-  
-  try {
-    // Test if we can query evaluations
-    const { data, error } = await supabase
-      .from('evaluations')
-      .select('count')
-      .limit(1)
-    
-    if (error) {
-      console.log(`   ⚠️  RLS query test failed: ${error.message}`)
-      console.log('   This might be expected if no data exists yet.')
-      return false
-    }
-    
-    console.log('   ✅ RLS policies working correctly')
-    return true
-  } catch (error) {
-    console.log(`   ⚠️  RLS verification error: ${error.message}`)
-    return false
-  }
-}
-
-// ============ CHECK FOR EXISTING DATA ============
-
-async function checkExistingData(userId) {
-  console.log('\n🔍 Checking for existing data...')
-  
-  try {
-    const { data: evals, error: evalsError } = await supabase
-      .from('evaluations')
-      .select('id')
-      .eq('user_id', userId)
-      .limit(1)
-    
-    if (evalsError) {
-      console.log('   ⚠️  Could not check existing evaluations')
-      return false
-    }
-    
-    if (evals && evals.length > 0) {
-      console.log('   ⚠️  Found existing evaluations for this user!')
-      return true
-    }
-    
-    console.log('   ✅ No existing data found')
-    return false
-  } catch (error) {
-    console.log(`   ⚠️  Error checking data: ${error.message}`)
-    return false
-  }
-}
-
-// ============ CLEANUP EXISTING DATA ============
-
-async function cleanupExistingData(userId) {
-  console.log('\n🧹 Cleaning up existing data...')
-  
-  try {
-    // Delete evaluations
-    const { error: evalsError } = await supabase
-      .from('evaluations')
-      .delete()
-      .eq('user_id', userId)
-    
-    if (evalsError) {
-      console.log(`   ⚠️  Could not delete evaluations: ${evalsError.message}`)
-    } else {
-      console.log('   ✅ Deleted existing evaluations')
-    }
-    
-    // Delete config
-    const { error: configError } = await supabase
-      .from('user_configs')
-      .delete()
-      .eq('user_id', userId)
-    
-    if (configError) {
-      console.log(`   ⚠️  Could not delete config: ${configError.message}`)
-    } else {
-      console.log('   ✅ Deleted existing config')
-    }
-    
-    return true
-  } catch (error) {
-    console.error(`   ❌ Cleanup error: ${error.message}`)
-    return false
-  }
-}
-
-// Insert default config
-async function ensureConfig(userId) {
-  console.log('\n🔍 Setting up user config...')
-
-  try {
-    // Check if config exists
-    const { data: existingConfig, error: fetchError } = await supabase
-      .from('user_configs')
-      .select('*')
-      .eq('user_id', userId)
-      .maybeSingle()
-
-    if (existingConfig) {
-      console.log('   ✅ Config already exists')
-      return existingConfig
-    }
-
-    // Create default config
-    console.log('   📝 Creating default config...')
-    const { data: newConfig, error: insertError } = await supabase
-      .from('user_configs')
-      .insert({
+async function upsertUserConfig(userId) {
+  const client = adminClient || userClient
+  const { error } = await client
+    .from('user_configs')
+    .upsert(
+      {
         user_id: userId,
         run_policy: 'always',
         sample_rate_pct: 100,
         obfuscate_pii: false,
         max_eval_per_day: 1000
-      })
-      .select()
-      .single()
+      },
+      { onConflict: 'user_id' }
+    )
 
-    if (insertError) {
-      console.error(`   ❌ Error creating config: ${insertError.message}`)
-      throw insertError
-    }
-
-    console.log('   ✅ Config created successfully')
-    return newConfig
-  } catch (error) {
-    console.error(`   ❌ Error with config: ${error.message}`)
-    throw error
-  }
+  if (error) throw error
 }
 
-// Generate evaluation records
-async function generateEvaluations(userId, count) {
-  console.log(`\n📊 Generating ${count} evaluation records...`)
-  console.log(`   Using User ID: ${userId}`)
-  console.log(`   📅 70% in last 7 days, 30% in 8-30 days ago`)
-  
-  const evaluations = []
-  const batchSize = 50
-  let created = 0
-  
-  for (let i = 0; i < count; i++) {
-    const promptIndex = Math.floor(Math.random() * PROMPTS.length)
-    const score = generateScore()
-    
-    evaluations.push({
-      user_id: userId, // ✅ Using authenticated user's ID
-      interaction_id: `eval-${String(i + 1).padStart(6, '0')}`,
-      prompt: PROMPTS[promptIndex],
-      response: RESPONSES[promptIndex],
-      score: score,
-      latency_ms: generateLatency(),
-      flags: generateFlags(score),
-      pii_tokens_redacted: generatePiiTokens(),
-      created_at: generateTimestamp(i, count) // Smart distribution
-    })
+async function deleteExistingEvaluations(userId) {
+  if (!adminClient) {
+    console.log('⚠️  SUPABASE_SERVICE_ROLE_KEY not set; skipping delete (data may accumulate).')
+    console.log('   For daily GitHub Action reseeds, add SUPABASE_SERVICE_ROLE_KEY to secrets to make reseeding idempotent.')
+    return
+  }
 
-    // Insert in batches
-    if (evaluations.length >= batchSize || i === count - 1) {
-      try {
-        const { error } = await supabase
-          .from('evaluations')
-          .insert(evaluations)
+  console.log('🧹 Clearing existing demo evaluations (service role)...')
+  const { error } = await adminClient
+    .from('evaluations')
+    .delete()
+    .eq('user_id', userId)
 
-        if (error) {
-          console.error(`\n   ❌ Error inserting batch: ${error.message}`)
-          console.error(`   Hint: Check RLS policies and user authentication`)
-          throw error
-        }
+  if (error) throw error
+}
 
-        created += evaluations.length
-        const progress = Math.round((created / count) * 100)
-        process.stdout.write(`\r   ⏳ Progress: ${progress}% (${created}/${count})`)
-        
-        evaluations.length = 0 // Clear array
-      } catch (error) {
-        console.error('\n   ❌ Failed to insert batch:', error.message)
-        throw error
+async function seedEvaluations(userId, totalEvaluations, days) {
+  console.log(`\n🌱 Seeding demo data: ${totalEvaluations} evals across ${days} days`) 
+
+  reseedRngForToday()
+
+  const now = new Date()
+  const todayUtcStart = utcStartOfDay(now)
+  const dayMs = 24 * 60 * 60 * 1000
+  const oldestUtcStart = new Date(todayUtcStart.getTime() - (days - 1) * dayMs)
+
+  console.log(`   🕒 Now (UTC):        ${now.toISOString()}`)
+  console.log(`   📅 Today UTC start:  ${todayUtcStart.toISOString()}`)
+  console.log(`   📅 Oldest UTC start: ${oldestUtcStart.toISOString()}`)
+  const dailyCounts = computeDailyCounts(totalEvaluations, days)
+
+  const batchSize = 100
+  const buffer = []
+  let inserted = 0
+  let globalIndex = 0
+
+  for (let dayIndexFromOldest = 0; dayIndexFromOldest < days; dayIndexFromOldest++) {
+    const offsetFromOldest = days - 1 - dayIndexFromOldest
+    const utcDayStart = new Date(todayUtcStart.getTime() - offsetFromOldest * 24 * 60 * 60 * 1000)
+    const countForDay = dailyCounts[dayIndexFromOldest]
+
+    for (let j = 0; j < countForDay; j++) {
+      const promptIndex = Math.floor(rng() * PROMPTS.length)
+      const score = generateScore(dayIndexFromOldest)
+      const latencyMs = generateLatency(dayIndexFromOldest)
+
+      buffer.push({
+        user_id: userId,
+        interaction_id: `eval-${String(globalIndex + 1).padStart(6, '0')}`,
+        prompt: PROMPTS[promptIndex],
+        response: RESPONSES[promptIndex],
+        score: score,
+        latency_ms: latencyMs,
+        flags: generateFlags(score, latencyMs),
+        pii_tokens_redacted: generatePiiTokens(),
+        created_at: randomTimestampWithinUtcDay(utcDayStart).toISOString()
+      })
+
+      globalIndex += 1
+
+      if (buffer.length >= batchSize) {
+        const client = adminClient || userClient
+        const { error } = await client.from('evaluations').insert(buffer)
+        if (error) throw error
+        inserted += buffer.length
+        buffer.length = 0
+        process.stdout.write(`\r   ⏳ Inserted ${inserted}/${totalEvaluations}`)
       }
     }
   }
 
-  console.log('\n   ✅ All evaluations created!')
-  return created
+  if (buffer.length > 0) {
+    const client = adminClient || userClient
+    const { error } = await client.from('evaluations').insert(buffer)
+    if (error) throw error
+    inserted += buffer.length
+    process.stdout.write(`\r   ⏳ Inserted ${inserted}/${totalEvaluations}`)
+  }
+
+  console.log('\n✅ Insert complete')
 }
 
-// Get statistics
-async function getStatistics(userId) {
-  console.log('\n📈 Verifying data with statistics...')
+async function sanityCheck(userId) {
+  const now = new Date()
+  const threshold7 = now.getTime() - 7 * 864e5
+  const threshold14 = now.getTime() - 14 * 864e5
+  const threshold30 = now.getTime() - 30 * 864e5
 
-  try {
-    const { data, error } = await supabase
+  const client = adminClient || userClient
+  const qCount = async (thresholdMs) => {
+    const thresholdIso = new Date(thresholdMs).toISOString()
+    const { count, error } = await client
       .from('evaluations')
-      .select('score, latency_ms, pii_tokens_redacted')
+      .select('id', { count: 'exact', head: true })
       .eq('user_id', userId)
-
-    if (error) {
-      console.error(`   ❌ Error fetching stats: ${error.message}`)
-      throw error
-    }
-
-    if (!data || data.length === 0) {
-      console.log('   ⚠️  No evaluations found!')
-      console.log('   This might indicate an RLS issue.')
-      return null
-    }
-
-    const total = data.length
-    const avgScore = (data.reduce((sum, e) => sum + e.score, 0) / total).toFixed(2)
-    const avgLatency = (data.reduce((sum, e) => sum + e.latency_ms, 0) / total).toFixed(0)
-    const successRate = ((data.filter(e => e.score >= 70).length / total) * 100).toFixed(1)
-    const totalPii = data.reduce((sum, e) => sum + (e.pii_tokens_redacted || 0), 0)
-
-    return {
-      total,
-      avgScore,
-      avgLatency,
-      successRate,
-      totalPii
-    }
-  } catch (error) {
-    console.error(`   ❌ Error calculating statistics: ${error.message}`)
-    return null
+      .gte('created_at', thresholdIso)
+    if (error) throw error
+    return count || 0
   }
+
+  const count7 = await qCount(threshold7)
+  const count14 = await qCount(threshold14)
+  const count30 = await qCount(threshold30)
+
+  const { data: minRow, error: minErr } = await client
+    .from('evaluations')
+    .select('created_at')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: true })
+    .limit(1)
+  if (minErr) throw minErr
+
+  const { data: maxRow, error: maxErr } = await client
+    .from('evaluations')
+    .select('created_at')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+    .limit(1)
+  if (maxErr) throw maxErr
+
+  console.log('\n📌 Sanity check (should be strictly increasing):')
+  console.log(`   last 7 days : ${count7}`)
+  console.log(`   last 14 days: ${count14}`)
+  console.log(`   last 30 days: ${count30}`)
+  console.log(`   min created_at: ${minRow?.[0]?.created_at}`)
+  console.log(`   max created_at: ${maxRow?.[0]?.created_at}`)
 }
 
-// Main function
 async function main() {
-  console.log('🌱 Starting IMPROVED database seeding process...\n')
-  console.log('=' .repeat(60))
+  console.log('🌱 Starting demo seeding...')
+  console.log('='.repeat(60))
 
-  let user
+  const user = await ensureTestUser()
+  console.log(`✅ Authenticated: ${user.email}`)
+  console.log(`   User ID: ${user.id}`)
 
-  try {
-    // Step 1: Ensure test user is authenticated
-    user = await ensureTestUserAuthenticated()
-    
-    if (!user) {
-      throw new Error('Failed to authenticate user')
-    }
+  await upsertUserConfig(user.id)
+  await deleteExistingEvaluations(user.id)
 
-    // Step 2: Verify RLS access
-    await verifyRLSAccess(user.id)
+  const totalEvaluations = 1000
+  const days = 30
 
-    // Step 3: Check for existing data
-    const hasExistingData = await checkExistingData(user.id)
-    
-    if (hasExistingData) {
-      console.log('\n⚠️  EXISTING DATA DETECTED!')
-      console.log('   Options:')
-      console.log('   1. Ctrl+C to cancel and keep existing data')
-      console.log('   2. Wait 5 seconds to DELETE existing data and reseed\n')
-      
-      // Wait 5 seconds
-      await new Promise(resolve => setTimeout(resolve, 5000))
-      
-      await cleanupExistingData(user.id)
-    }
+  await seedEvaluations(user.id, totalEvaluations, days)
+  await sanityCheck(user.id)
 
-    // Step 4: Ensure config exists
-    await ensureConfig(user.id)
-
-    // Step 5: Generate evaluations
-    const count = Math.floor(Math.random() * 501) + 500 // 500-1000
-    await generateEvaluations(user.id, count)
-
-    // Step 6: Verify with statistics
-    const stats = await getStatistics(user.id)
-
-    if (!stats) {
-      throw new Error('Failed to retrieve statistics - possible RLS issue!')
-    }
-
-    console.log('\n' + '='.repeat(60))
-    console.log('🎉 SEEDING COMPLETE!\n')
-    console.log(`📧 User: ${TEST_USER.email}`)
-    console.log(`📝 Password: ${TEST_USER.password}`)
-    console.log(`🆔 User ID: ${user.id}`)
-    console.log(`\n📊 Summary:`)
-    console.log(`   Total Evaluations: ${stats.total}`)
-    console.log(`   Average Score: ${stats.avgScore}`)
-    console.log(`   Average Latency: ${stats.avgLatency}ms`)
-    console.log(`   Success Rate: ${stats.successRate}%`)
-    console.log(`   PII Tokens Redacted: ${stats.totalPii}`)
-    console.log('\n✅ Data is properly associated with your authenticated user!')
-    console.log('✅ RLS policies verified - data should appear in dashboard!')
-    console.log('\n🚀 You can now log in and view the dashboard!')
-    console.log('=' .repeat(60))
-
-  } catch (error) {
-    console.error('\n❌ Seeding failed:', error.message)
-    if (user) {
-      console.error(`\n💡 Debug info:`)
-      console.error(`   User ID: ${user.id}`)
-      console.error(`   Email: ${user.email}`)
-    }
-    console.error('\n📝 Troubleshooting:')
-    console.error('   1. Check RLS policies in Supabase')
-    console.error('   2. Verify email confirmation is disabled')
-    console.error('   3. Check if user can authenticate')
-    process.exit(1)
-  }
+  console.log('='.repeat(60))
+  console.log('🎉 SEED COMPLETE')
+  console.log(`📧 Demo login: ${TEST_USER.email}`)
+  console.log(`🔑 Password : ${TEST_USER.password}`)
 }
 
-// Run the script
-main()
+main().catch(err => {
+  console.error('\n❌ Seed failed:', err?.message || err)
+  process.exit(1)
+})

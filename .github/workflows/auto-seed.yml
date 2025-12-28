@@ -2,8 +2,8 @@ name: Auto Seed Demo Data
 
 on:
   schedule:
-    # Runs every day at 8:00 AM UTC
-    - cron: '0 8 * * *'
+    # Runs every day at 8:00 AM IST (02:30 UTC). GitHub Actions cron uses UTC.
+    - cron: '30 2 * * *'
   workflow_dispatch:
     # Allows manual trigger from GitHub Actions UI
 
@@ -26,6 +26,7 @@ jobs:
         run: |
           echo "NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}" >> .env.local
           echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}" >> .env.local
+          echo "SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" >> .env.local
 
       - name: Run seed script
         run: node scripts/seed.js
