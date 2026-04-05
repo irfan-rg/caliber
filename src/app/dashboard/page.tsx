@@ -3,15 +3,41 @@
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
+import Skeleton from 'react-loading-skeleton'
 import { createClient } from '@/lib/supabase/client'
 import { useToast } from '@/components/ui/ToastProvider'
 import StatsCards from '@/components/Dashboard/StatsCards'
 import TrendChart from '@/components/Dashboard/TrendChart'
+import CategoryChart from '@/components/Dashboard/CategoryChart'
 import RecentEvals from '@/components/Dashboard/RecentEvals'
 import { StatCardSkeletonGrid } from '@/components/Skeletons/StatCardSkeleton'
-import { ChartSkeleton } from '@/components/Skeletons/ChartSkeleton'
+import { TrendChartSkeleton } from '@/components/Skeletons/TrendChartSkeleton'
+import { CategoryChartSkeleton } from '@/components/Skeletons/CategoryChartSkeleton'
 import { TableSkeleton } from '@/components/Skeletons/TableSkeleton'
 import { cachedFetch } from '@/lib/cache'
+
+const baseColorLight = 'rgba(0, 0, 0, 0.06)'
+const highlightColorLight = 'rgba(0, 0, 0, 0.12)'
+const baseColorDark = 'rgba(255, 255, 255, 0.08)'
+const highlightColorDark = 'rgba(255, 255, 255, 0.18)'
+
+function useSkeletonPalette() {
+  const [palette, setPalette] = useState({
+    baseColor: baseColorLight,
+    highlightColor: highlightColorLight,
+  })
+
+  useEffect(() => {
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+    setPalette(
+      prefersDark
+        ? { baseColor: baseColorDark, highlightColor: highlightColorDark }
+        : { baseColor: baseColorLight, highlightColor: highlightColorLight }
+    )
+  }, [])
+
+  return palette
+}
 
 interface DailyTrend {
   date: string
@@ -43,25 +69,21 @@ export default function DashboardPage() {
   const [recentEvals, setRecentEvals] = useState<EvaluationRow[]>([])
   const [days, setDays] = useState(7)
   const [progress, setProgress] = useState(0)
-  const [fromCache, setFromCache] = useState(false) // Track if data came from cache
   const [isPending, startTransition] = useTransition()
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false) // Track if we've loaded data before
   const previousStats7DayRef = useRef<StatsData | null>(null)
   const previousStats30DayRef = useRef<StatsData | null>(null)
+  const requestIdRef = useRef(0)
   const router = useRouter()
   const supabase = createClient()
   const { notify } = useToast()
-
-  // Show skeleton only when loading and we don't have any previous data
-  const showInitialSkeleton = loading && !stats
+  const skeletonPalette = useSkeletonPalette()
 
   const loadData = useCallback(async () => {
-    // For subsequent loads, only show loading if we're changing time range
-    const isDataRefresh = hasLoadedOnce && stats
-    
-    if (!isDataRefresh) {
-      setLoading(true)
-    }
+    const minSkeletonMs = 250
+    const startedAt = Date.now()
+    const requestId = ++requestIdRef.current
+    setLoading(true)
     
     try {
       // Use cached fetch for faster subsequent loads
@@ -69,13 +91,6 @@ export default function DashboardPage() {
         cachedFetch(`/api/evals/stats?days=${days}`, undefined, 15000), // 15s cache
         cachedFetch('/api/evals?limit=10', undefined, 10000) // 10s cache
       ])
-      
-      // Track if any data came from cache
-      const anyCached = statsResponse.fromCache || evalsResponse.fromCache
-      setFromCache(anyCached)
-      if (anyCached) {
-        setLoading(false) // End loading instantly for cached data
-      }
       
       if (statsResponse.ok) {
         const responseData = await statsResponse.json() as { data: StatsData } | null
@@ -108,10 +123,21 @@ export default function DashboardPage() {
         description: 'Unable to fetch dashboard data. Please try refreshing.',
       })
     } finally {
-      if (!fromCache) setLoading(false) // Only for fresh data
+      const elapsed = Date.now() - startedAt
+      if (elapsed < minSkeletonMs) {
+        await new Promise((resolve) => {
+          window.setTimeout(resolve, minSkeletonMs - elapsed)
+        })
+      }
+
+      if (requestId !== requestIdRef.current) {
+        return
+      }
+
+      setLoading(false)
       setHasLoadedOnce(true)
     }
-  }, [days, hasLoadedOnce, stats, fromCache, notify])
+  }, [days, notify])
 
   useEffect(() => {
     const bootstrap = async () => {
@@ -132,13 +158,12 @@ export default function DashboardPage() {
     if (typeof window === 'undefined') return
 
     if (loading) {
-      // Different progress speeds for first vs subsequent loads
       const startProgress = hasLoadedOnce ? 60 : 15
       const progressSpeed = hasLoadedOnce ? 300 : 240
       
       setProgress(startProgress)
       const handle = window.setInterval(() => {
-        setProgress((prev) => Math.min(prev + Math.random() * 20, 85))
+        setProgress((prev) => Math.min(prev + Math.random() * 20, 92))
       }, progressSpeed)
       return () => window.clearInterval(handle)
     }
@@ -152,20 +177,53 @@ export default function DashboardPage() {
 
   const handleRangeChange = (range: number) => {
     if (days === range) return
+    setLoading(true)
     startTransition(() => {
       setDays(range)
     })
   }
 
-  if (showInitialSkeleton) {
+  if (loading) {
     return (
       <div className="flex flex-1 flex-col gap-6 sm:gap-8 px-3 sm:px-4 lg:px-8 pb-12 sm:pb-16 pt-6 sm:pt-8">
-        <div className="space-y-2">
-          <div className="h-8 sm:h-10 w-36 sm:w-44 animate-pulse rounded-full bg-[#007AFF]/10" />
-          <div className="h-4 sm:h-5 w-48 sm:w-64 animate-pulse rounded-full bg-black/10 dark:bg-white/10" />
+        <div className="flex flex-col gap-3 sm:gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="space-y-2">
+            <Skeleton
+              width={176}
+              height={36}
+              borderRadius={999}
+              baseColor={skeletonPalette.baseColor}
+              highlightColor={skeletonPalette.highlightColor}
+            />
+            <Skeleton
+              width={248}
+              height={18}
+              borderRadius={999}
+              baseColor={skeletonPalette.baseColor}
+              highlightColor={skeletonPalette.highlightColor}
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            {[0, 1, 2].map((index) => (
+              <Skeleton
+                key={`dashboard-range-skeleton-${index}`}
+                width={78}
+                height={34}
+                borderRadius={999}
+                baseColor={skeletonPalette.baseColor}
+                highlightColor={skeletonPalette.highlightColor}
+              />
+            ))}
+          </div>
         </div>
+
         <StatCardSkeletonGrid count={4} fast={hasLoadedOnce} />
-        <ChartSkeleton fast={hasLoadedOnce} />
+
+        <div className="grid gap-6 sm:gap-8 xl:grid-cols-2">
+          <TrendChartSkeleton fast={hasLoadedOnce} />
+          <CategoryChartSkeleton fast={hasLoadedOnce} />
+        </div>
+
         <TableSkeleton rows={6} fast={hasLoadedOnce} />
       </div>
     )
@@ -174,7 +232,7 @@ export default function DashboardPage() {
   return (
     <div className="relative flex flex-1 flex-col gap-6 sm:gap-8 px-3 sm:px-4 lg:px-8 pb-12 sm:pb-16 pt-6 sm:pt-8">
       <AnimatePresence>
-        {(loading || isPending || progress > 0) && progress < 100 && (
+        {(isPending || progress > 0) && progress < 100 && (
           <motion.div
             key="progress-bar"
             initial={{ width: '0%' }}
@@ -245,20 +303,22 @@ export default function DashboardPage() {
       </div>
 
       {stats && (
-        <StatsCards 
-          stats={stats} 
-          previousStats={days === 7 ? previousStats7DayRef.current : previousStats30DayRef.current} 
+        <StatsCards
+          stats={stats}
+          previousStats={days === 7 ? previousStats7DayRef.current : previousStats30DayRef.current}
         />
       )}
 
-      <div className="grid gap-6 sm:gap-8 xl:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
+      <div className="grid gap-6 sm:gap-8 xl:grid-cols-2">
         <TrendChart
           data={filteredTrends}
           selectedDays={days}
           onRangeChange={handleRangeChange}
         />
-        <RecentEvals evals={recentEvals} />
+        <CategoryChart days={days} />
       </div>
+
+      <RecentEvals evals={recentEvals} />
     </div>
   )
 }

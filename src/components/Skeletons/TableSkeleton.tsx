@@ -34,9 +34,9 @@ export function TableSkeleton({ rows = 6, fast = false }: { rows?: number; fast?
   return (
     <motion.div
       className="glass-card w-full rounded-3xl p-4"
-      initial={{ opacity: 0, y: fast ? 2 : 8 }}
+      initial={false}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: fast ? 0.1 : 0.25, ease: [0.16, 1, 0.3, 1] }}
+      transition={{ duration: fast ? 0.06 : 0.12, ease: [0.16, 1, 0.3, 1] }}
     >
       <div className="mb-4 flex items-center justify-between">
         <Skeleton

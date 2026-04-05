@@ -40,9 +40,9 @@ export function StatCardSkeleton({ fast = false }: { fast?: boolean }) {
   return (
     <motion.div
       className="glass-card flex flex-col justify-between rounded-3xl p-5"
-      initial={{ opacity: 0, scale: fast ? 0.98 : 0.95 }}
+      initial={false}
       animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: fast ? 0.15 : 0.3, ease: [0.16, 1, 0.3, 1] }}
+      transition={{ duration: fast ? 0.06 : 0.12, ease: [0.16, 1, 0.3, 1] }}
     >
       <div className="flex items-center justify-between">
         <Skeleton
