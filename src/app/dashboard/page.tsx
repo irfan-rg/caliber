@@ -9,6 +9,7 @@ import { useToast } from '@/components/ui/ToastProvider'
 import StatsCards from '@/components/Dashboard/StatsCards'
 import TrendChart from '@/components/Dashboard/TrendChart'
 import CategoryChart from '@/components/Dashboard/CategoryChart'
+import InsightsCard from '@/components/Dashboard/InsightsCard'
 import RecentEvals from '@/components/Dashboard/RecentEvals'
 import { StatCardSkeletonGrid } from '@/components/Skeletons/StatCardSkeleton'
 import { TrendChartSkeleton } from '@/components/Skeletons/TrendChartSkeleton'
@@ -319,6 +320,8 @@ export default function DashboardPage() {
         />
         <CategoryChart data={categoryData} />
       </div>
+
+      <InsightsCard categoryData={categoryData} selectedDays={days} />
 
       <RecentEvals evals={recentEvals} />
     </div>

@@ -422,7 +422,7 @@ export default function EvalList({
 						<tr>
 							<th className="px-3 sm:px-6 py-3 sm:py-4 font-medium whitespace-nowrap">Interaction</th>
 							<th className="px-3 sm:px-6 py-3 sm:py-4 font-medium whitespace-nowrap">Category</th>
-							<th className="px-3 sm:px-6 py-3 sm:py-4 font-medium whitespace-nowrap">Amount</th>
+							<th className="px-3 sm:px-6 py-3 sm:py-4 font-medium whitespace-nowrap">Score</th>
 							<th className="px-3 sm:px-6 py-3 sm:py-4 font-medium whitespace-nowrap">Date</th>
 							<th className="px-3 sm:px-6 py-3 sm:py-4 font-medium whitespace-nowrap">Latency</th>
 							<th className="px-3 sm:px-6 py-3 sm:py-4 text-right font-medium whitespace-nowrap">Action</th>
