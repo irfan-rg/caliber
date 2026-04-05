@@ -15,6 +15,7 @@ interface CategoryDatum {
   category: string
   totalScore: number
   evaluations: number
+  [key: string]: string | number
 }
 
 interface CategoryChartPoint extends CategoryDatum {

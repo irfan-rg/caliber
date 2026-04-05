@@ -224,7 +224,7 @@ export default function TrendChart({
               dot={{ r: chartConfig.dotRadius - 1, strokeWidth: 0, fill: '#34C759' }}
               activeDot={{ r: chartConfig.dotRadius + 1, stroke: '#FFFFFF', strokeWidth: 2 }}
               isAnimationActive
-              animationDuration={600}
+              animationDuration={320}
             />
             <Line
               yAxisId="right"
@@ -236,7 +236,7 @@ export default function TrendChart({
               dot={{ r: chartConfig.dotRadius - 1, strokeWidth: 0, fill: '#FF9500' }}
               activeDot={{ r: chartConfig.dotRadius + 1, stroke: '#FFFFFF', strokeWidth: 2 }}
               isAnimationActive
-              animationDuration={600}
+              animationDuration={320}
             />
             <Line
               yAxisId="left"

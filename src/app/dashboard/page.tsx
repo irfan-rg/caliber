@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import Skeleton from 'react-loading-skeleton'
@@ -65,25 +65,29 @@ interface EvaluationRow {
 
 export default function DashboardPage() {
   const [loading, setLoading] = useState(true) // Start true to prevent flash
+  const [authReady, setAuthReady] = useState(false)
   const [stats, setStats] = useState<StatsData | null>(null)
   const [recentEvals, setRecentEvals] = useState<EvaluationRow[]>([])
   const [days, setDays] = useState(7)
-  const [progress, setProgress] = useState(0)
-  const [isPending, startTransition] = useTransition()
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false) // Track if we've loaded data before
   const previousStats7DayRef = useRef<StatsData | null>(null)
   const previousStats30DayRef = useRef<StatsData | null>(null)
   const requestIdRef = useRef(0)
+  const hasLoadedOnceRef = useRef(false)
   const router = useRouter()
   const supabase = createClient()
   const { notify } = useToast()
   const skeletonPalette = useSkeletonPalette()
 
   const loadData = useCallback(async () => {
-    const minSkeletonMs = 250
-    const startedAt = Date.now()
     const requestId = ++requestIdRef.current
-    setLoading(true)
+    const isInitialRequest = !hasLoadedOnceRef.current
+    const minSkeletonMs = isInitialRequest ? 250 : 0
+    const startedAt = Date.now()
+
+    if (isInitialRequest) {
+      setLoading(true)
+    }
     
     try {
       // Use cached fetch for faster subsequent loads
@@ -124,7 +128,7 @@ export default function DashboardPage() {
       })
     } finally {
       const elapsed = Date.now() - startedAt
-      if (elapsed < minSkeletonMs) {
+      if (minSkeletonMs > 0 && elapsed < minSkeletonMs) {
         await new Promise((resolve) => {
           window.setTimeout(resolve, minSkeletonMs - elapsed)
         })
@@ -134,53 +138,55 @@ export default function DashboardPage() {
         return
       }
 
-      setLoading(false)
+      if (isInitialRequest) {
+        setLoading(false)
+        hasLoadedOnceRef.current = true
+      }
+
       setHasLoadedOnce(true)
     }
   }, [days, notify])
 
   useEffect(() => {
-    const bootstrap = async () => {
+    let cancelled = false
+
+    const checkAuth = async () => {
       const {
         data: { user },
       } = await supabase.auth.getUser()
+
+      if (cancelled) {
+        return
+      }
+
       if (!user) {
         router.push('/login')
         return
       }
-      await loadData()
+
+      setAuthReady(true)
     }
 
-    void bootstrap()
-  }, [loadData, router, supabase.auth])
+    void checkAuth()
+
+    return () => {
+      cancelled = true
+    }
+  }, [router, supabase.auth])
 
   useEffect(() => {
-    if (typeof window === 'undefined') return
-
-    if (loading) {
-      const startProgress = hasLoadedOnce ? 60 : 15
-      const progressSpeed = hasLoadedOnce ? 300 : 240
-      
-      setProgress(startProgress)
-      const handle = window.setInterval(() => {
-        setProgress((prev) => Math.min(prev + Math.random() * 20, 92))
-      }, progressSpeed)
-      return () => window.clearInterval(handle)
+    if (!authReady) {
+      return
     }
 
-    setProgress(100)
-    const timeout = window.setTimeout(() => setProgress(0), 400)
-    return () => window.clearTimeout(timeout)
-  }, [loading, hasLoadedOnce])
+    void loadData()
+  }, [authReady, loadData])
 
   const filteredTrends = useMemo(() => stats?.dailyTrends ?? [], [stats?.dailyTrends])
 
   const handleRangeChange = (range: number) => {
     if (days === range) return
-    setLoading(true)
-    startTransition(() => {
-      setDays(range)
-    })
+    setDays(range)
   }
 
   if (loading) {
@@ -231,20 +237,6 @@ export default function DashboardPage() {
 
   return (
     <div className="relative flex flex-1 flex-col gap-6 sm:gap-8 px-3 sm:px-4 lg:px-8 pb-12 sm:pb-16 pt-6 sm:pt-8">
-      <AnimatePresence>
-        {(isPending || progress > 0) && progress < 100 && (
-          <motion.div
-            key="progress-bar"
-            initial={{ width: '0%' }}
-            animate={{ width: `${progress}%` }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-            className="pointer-events-none fixed left-0 top-0 z-30 h-1 bg-gradient-to-r from-[#007AFF] via-[#5856D6] to-[#AF52DE]"
-          />
-        )}
-      </AnimatePresence>
-
-
       <div className="flex flex-col gap-3 sm:gap-4 lg:flex-row lg:items-center lg:justify-between">
         <motion.div
           initial={{ opacity: 0, y: -12 }}
