@@ -7,12 +7,18 @@ import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { createClient } from '@/lib/supabase/client'
 import { useToast } from '@/components/ui/ToastProvider'
-import EvalList, { type EvaluationRow } from '@/components/Evaluations/EvalList'
+import EvalList, { type EvaluationRow, type EvalFilters } from '@/components/Evaluations/EvalList'
 import { TableSkeleton } from '@/components/Skeletons/TableSkeleton'
 import { StatCardSkeletonGrid } from '@/components/Skeletons/StatCardSkeleton'
 import { ChartSkeleton } from '@/components/Skeletons/ChartSkeleton'
 
 const PAGE_SIZE = 20
+const DEFAULT_FILTERS: EvalFilters = {
+  query: '',
+  category: 'all',
+  startDate: '',
+  endDate: '',
+}
 
 export default function EvaluationsPage() {
   const [loading, setLoading] = useState(true) // Start true to prevent flash
@@ -20,6 +26,8 @@ export default function EvaluationsPage() {
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [totalCount, setTotalCount] = useState(0)
+  const [filters, setFilters] = useState<EvalFilters>(DEFAULT_FILTERS)
+  const [debouncedQuery, setDebouncedQuery] = useState('')
   const [progress, setProgress] = useState(0)
   const [isPending, startTransition] = useTransition()
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false) // Track if we've loaded before
@@ -27,6 +35,14 @@ export default function EvaluationsPage() {
   const supabase = createClient()
   const { notify } = useToast()
   const initialLoad = useRef(true)
+
+  useEffect(() => {
+    const timeout = window.setTimeout(() => {
+      setDebouncedQuery(filters.query.trim())
+    }, 240)
+
+    return () => window.clearTimeout(timeout)
+  }, [filters.query])
 
   const loadEvaluations = useCallback(async () => {
     // Only show skeleton for initial load or when we have no data
@@ -38,8 +54,29 @@ export default function EvaluationsPage() {
     
     let cachedResponse: CachedResponse | undefined = undefined
     try {
+      const queryParams = new URLSearchParams({
+        page: String(page),
+        limit: String(PAGE_SIZE),
+      })
+
+      if (debouncedQuery) {
+        queryParams.set('q', debouncedQuery)
+      }
+
+      if (filters.category !== 'all') {
+        queryParams.set('category', filters.category)
+      }
+
+      if (filters.startDate) {
+        queryParams.set('startDate', filters.startDate)
+      }
+
+      if (filters.endDate) {
+        queryParams.set('endDate', filters.endDate)
+      }
+
       // Use cached fetch for faster subsequent loads
-      cachedResponse = await cachedFetch(`/api/evals?page=${page}&limit=${PAGE_SIZE}`, undefined, 8000) // 8s cache
+      cachedResponse = await cachedFetch(`/api/evals?${queryParams.toString()}`, undefined, 8000) // 8s cache
       if (cachedResponse.fromCache) {
         setLoading(false) // End loading instantly for cached data
       }
@@ -63,7 +100,7 @@ export default function EvaluationsPage() {
         setHasLoadedOnce(true)
       }
     }
-  }, [page, hasLoadedOnce, evaluations.length, notify])
+  }, [page, debouncedQuery, filters.category, filters.startDate, filters.endDate, hasLoadedOnce, evaluations.length, notify])
 
   useEffect(() => {
     const bootstrap = async () => {
@@ -105,7 +142,23 @@ export default function EvaluationsPage() {
     })
   }
 
+  const handleFiltersChange = useCallback((nextFilters: EvalFilters) => {
+    setFilters(nextFilters)
+    setPage(1)
+  }, [])
+
+  const clearFilters = () => {
+    setFilters(DEFAULT_FILTERS)
+    setDebouncedQuery('')
+    setPage(1)
+  }
+
   const hasEvaluations = evaluations.length > 0
+  const hasActiveFilters =
+    debouncedQuery.length > 0 ||
+    filters.category !== 'all' ||
+    filters.startDate.length > 0 ||
+    filters.endDate.length > 0
 
   // Only show skeleton on initial load when we have no evaluations data
   if (loading && !hasLoadedOnce) {
@@ -161,18 +214,30 @@ export default function EvaluationsPage() {
           <span className="text-4xl sm:text-5xl">📡</span>
           <div className="space-y-2">
             <h2 className="text-lg sm:text-xl font-semibold text-[#1C1C1E] dark:text-white">
-              No Evaluations Yet
+              {hasActiveFilters ? 'No Records Match Filters' : 'No Evaluations Yet'}
             </h2>
             <p className="text-xs sm:text-sm text-[#8E8E93]">
-              Kick off your First Evaluation by Configuring the API Connection.
+              {hasActiveFilters
+                ? 'Try expanding date range, search, or category filters to find matching evaluations.'
+                : 'Kick off your First Evaluation by Configuring the API Connection.'}
             </p>
           </div>
-          <Link
-            href="/config"
-            className="rounded-full bg-[#007AFF] px-4 sm:px-5 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold text-white shadow-[0_4px_12px_rgba(0,122,255,0.2)] transition-transform duration-200 hover:scale-[1.02]"
-          >
-            Configure Settings
-          </Link>
+          {hasActiveFilters ? (
+            <button
+              type="button"
+              onClick={clearFilters}
+              className="rounded-full bg-[#007AFF] px-4 sm:px-5 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold text-white shadow-[0_4px_12px_rgba(0,122,255,0.2)] transition-transform duration-200 hover:scale-[1.02]"
+            >
+              Clear Filters
+            </button>
+          ) : (
+            <Link
+              href="/config"
+              className="rounded-full bg-[#007AFF] px-4 sm:px-5 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold text-white shadow-[0_4px_12px_rgba(0,122,255,0.2)] transition-transform duration-200 hover:scale-[1.02]"
+            >
+              Configure Settings
+            </Link>
+          )}
         </motion.div>
       ) : (
         <EvalList
@@ -180,6 +245,8 @@ export default function EvaluationsPage() {
           page={page}
           totalPages={totalPages}
           onPageChange={handlePageChange}
+          filters={filters}
+          onFiltersChange={handleFiltersChange}
           loading={loading || isPending}
           totalCount={totalCount}
         />

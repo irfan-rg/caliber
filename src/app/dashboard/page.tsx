@@ -53,6 +53,14 @@ interface StatsData {
   successRate: number
   totalPiiRedacted: number
   dailyTrends: DailyTrend[]
+  categoryBreakdown?: CategoryDatum[]
+}
+
+interface CategoryDatum {
+  category: string
+  totalScore: number
+  evaluations: number
+  [key: string]: string | number
 }
 
 interface EvaluationRow {
@@ -67,6 +75,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true) // Start true to prevent flash
   const [authReady, setAuthReady] = useState(false)
   const [stats, setStats] = useState<StatsData | null>(null)
+  const [categoryData, setCategoryData] = useState<CategoryDatum[]>([])
   const [recentEvals, setRecentEvals] = useState<EvaluationRow[]>([])
   const [days, setDays] = useState(7)
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false) // Track if we've loaded data before
@@ -93,13 +102,14 @@ export default function DashboardPage() {
       // Use cached fetch for faster subsequent loads
       const [statsResponse, evalsResponse] = await Promise.all([
         cachedFetch(`/api/evals/stats?days=${days}`, undefined, 15000), // 15s cache
-        cachedFetch('/api/evals?limit=10', undefined, 10000) // 10s cache
+        cachedFetch('/api/evals?limit=10', undefined, 10000), // 10s cache
       ])
       
       if (statsResponse.ok) {
         const responseData = await statsResponse.json() as { data: StatsData } | null
         if (responseData?.data) {
           const { data } = responseData
+          setCategoryData(data.categoryBreakdown || [])
           setStats((current) => {
             // Store previous stats for the correct time period
             if (days === 7) {
@@ -307,7 +317,7 @@ export default function DashboardPage() {
           selectedDays={days}
           onRangeChange={handleRangeChange}
         />
-        <CategoryChart days={days} />
+        <CategoryChart data={categoryData} />
       </div>
 
       <RecentEvals evals={recentEvals} />

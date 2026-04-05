@@ -83,7 +83,6 @@ export async function GET(request: Request) {
         .select('score, flags')
         .eq('user_id', user.id)
         .gte('created_at', startUtc.toISOString())
-        .order('created_at', { ascending: false })
         .range(offset, offset + pageSize - 1)
 
       if (error) {

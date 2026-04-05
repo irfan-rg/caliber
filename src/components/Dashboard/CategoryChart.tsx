@@ -8,7 +8,6 @@ import {
   PieChart,
   ResponsiveContainer,
 } from 'recharts'
-import { cachedFetch } from '@/lib/cache'
 import { cn, motionVariants, transitions } from '@/lib/design-system'
 
 interface CategoryDatum {
@@ -23,7 +22,8 @@ interface CategoryChartPoint extends CategoryDatum {
 }
 
 interface CategoryChartProps {
-  days: number
+  data: CategoryDatum[]
+  isRefreshing?: boolean
 }
 
 interface PieHoverEntry {
@@ -43,50 +43,9 @@ interface HoverChipState {
 
 const segmentColors = ['#007AFF', '#34C759', '#FF9500', '#5856D6', '#FF3B30', '#AF52DE']
 
-export default function CategoryChart({ days }: CategoryChartProps) {
-  const [data, setData] = useState<CategoryDatum[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+export default function CategoryChart({ data, isRefreshing }: CategoryChartProps) {
   const [activeSlice, setActiveSlice] = useState<number | null>(null)
   const [hoverChip, setHoverChip] = useState<HoverChipState | null>(null)
-
-  useEffect(() => {
-    let mounted = true
-
-    const loadCategoryData = async () => {
-      setLoading(true)
-      setError(null)
-
-      try {
-        const response = await cachedFetch(`/api/evals/categories?days=${days}`, undefined, 15000)
-        if (!response.ok) {
-          throw new Error(`Request failed with status ${response.status}`)
-        }
-
-        const body = await response.json() as { data?: CategoryDatum[] }
-        if (!mounted) {
-          return
-        }
-
-        setData(body.data || [])
-      } catch (fetchError) {
-        console.error('Category chart error:', fetchError)
-        if (mounted) {
-          setError('Unable to load category data')
-        }
-      } finally {
-        if (mounted) {
-          setLoading(false)
-        }
-      }
-    }
-
-    void loadCategoryData()
-
-    return () => {
-      mounted = false
-    }
-  }, [days])
 
   const chartData = useMemo<CategoryChartPoint[]>(() => {
     const topCategories = data
@@ -100,6 +59,11 @@ export default function CategoryChart({ days }: CategoryChartProps) {
       share: total > 0 ? Number(((item.totalScore / total) * 100).toFixed(1)) : 0,
     }))
   }, [data])
+
+  useEffect(() => {
+    setActiveSlice(null)
+    setHoverChip(null)
+  }, [chartData])
 
   const handleSliceHover = (entry?: PieHoverEntry, index?: number) => {
     if (
@@ -149,21 +113,7 @@ export default function CategoryChart({ days }: CategoryChartProps) {
     [chartData]
   )
 
-  if (error) {
-    return (
-      <motion.section
-        className="glass-card flex h-[280px] sm:h-[360px] flex-col items-center justify-center rounded-2xl sm:rounded-3xl text-center text-[#8E8E93] p-4"
-        variants={motionVariants.fadeIn}
-        initial="hidden"
-        animate="show"
-        transition={transitions.subtle}
-      >
-        <span className="text-xs sm:text-sm font-medium">{error}</span>
-      </motion.section>
-    )
-  }
-
-  if (!loading && chartData.length === 0) {
+  if (chartData.length === 0) {
     return (
       <motion.section
         className="glass-card flex h-[280px] sm:h-[360px] flex-col items-center justify-center rounded-2xl sm:rounded-3xl text-center text-[#8E8E93] p-4"
@@ -183,7 +133,8 @@ export default function CategoryChart({ days }: CategoryChartProps) {
   return (
     <motion.section
       className={cn(
-        'relative h-full overflow-hidden rounded-2xl sm:rounded-3xl border border-white/60 bg-white/90 p-4 sm:p-6 shadow-[0_2px_8px_rgba(0,0,0,0.04)] backdrop-blur-3xl',
+        'relative h-full overflow-hidden rounded-2xl sm:rounded-3xl border border-white/60 bg-white/90 p-4 sm:p-6 shadow-[0_2px_8px_rgba(0,0,0,0.04)] backdrop-blur-3xl transition-opacity',
+        isRefreshing ? 'opacity-85' : 'opacity-100',
         'dark:border-white/10 dark:bg-[#1D1D1F]/85'
       )}
       variants={motionVariants.fadeUp}

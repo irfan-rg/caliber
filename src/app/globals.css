@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "react-day-picker/style.css";
 
 :root {
   color-scheme: light;
@@ -263,5 +264,85 @@ h6 {
 
   .overflow-x-auto::-webkit-scrollbar-thumb:hover {
     background-color: rgba(0, 122, 255, 0.6);
+  }
+}
+
+.rdp-eval {
+  --rdp-accent-color: #007aff;
+  --rdp-accent-background-color: rgba(0, 122, 255, 0.14);
+  --rdp-day_button-border-radius: 9999px;
+  --rdp-day_button-width: 2rem;
+  --rdp-day_button-height: 2rem;
+  --rdp-day_button-border: 1px solid transparent;
+  --rdp-animation_duration: 0.12s;
+  margin: 0;
+  color: var(--color-text);
+}
+
+.rdp-eval .rdp-chevron {
+  fill: currentColor;
+}
+
+.rdp-eval .rdp-caption_label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.rdp-eval .rdp-weekday {
+  color: var(--color-text-muted);
+  font-size: 0.68rem;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.rdp-eval .rdp-button_previous,
+.rdp-eval .rdp-button_next {
+  border-radius: 9999px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.85);
+  color: var(--color-text);
+}
+
+.rdp-eval .rdp-button_previous:hover,
+.rdp-eval .rdp-button_next:hover {
+  background: rgba(0, 122, 255, 0.08);
+}
+
+.rdp-eval .rdp-day_button {
+  color: var(--color-text);
+}
+
+.rdp-eval .rdp-selected .rdp-day_button {
+  background: var(--rdp-accent-color);
+  color: #fff;
+  font-weight: 600;
+}
+
+.rdp-eval .rdp-today:not(.rdp-selected) .rdp-day_button {
+  border-color: rgba(0, 122, 255, 0.35);
+}
+
+@media (prefers-color-scheme: dark) {
+  .rdp-eval {
+    --rdp-accent-color: #0a84ff;
+    --rdp-accent-background-color: rgba(10, 132, 255, 0.22);
+  }
+
+  .rdp-eval .rdp-caption_label,
+  .rdp-eval .rdp-day_button {
+    color: #ffffff;
+  }
+
+  .rdp-eval .rdp-button_previous,
+  .rdp-eval .rdp-button_next {
+    border-color: rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.05);
+    color: #ffffff;
+  }
+
+  .rdp-eval .rdp-button_previous:hover,
+  .rdp-eval .rdp-button_next:hover {
+    background: rgba(255, 255, 255, 0.1);
   }
 }

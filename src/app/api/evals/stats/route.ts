@@ -1,8 +1,48 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import type { Database } from '@/lib/supabase/types'
+import type { Database, Json } from '@/lib/supabase/types'
 
 type Evaluation = Database['public']['Tables']['evaluations']['Row']
+
+interface CategoryTotals {
+  totalScore: number
+  evaluations: number
+}
+
+function formatCategoryName(value: string) {
+  return value
+    .replace(/[_-]+/g, ' ')
+    .trim()
+    .replace(/\b\w/g, (char) => char.toUpperCase())
+}
+
+function deriveCategory(flags: Json | null) {
+  if (!flags || typeof flags !== 'object' || Array.isArray(flags)) {
+    return 'No Flags'
+  }
+
+  const record = flags as Record<string, Json | undefined>
+
+  const typeValue = record.type
+  if (typeof typeValue === 'string' && typeValue.trim().length > 0) {
+    return formatCategoryName(typeValue)
+  }
+
+  if (record.error === true) return 'Error'
+  if (record.timeout === true) return 'Timeout'
+
+  const warning = record.warning
+  if (typeof warning === 'string' && warning.trim().length > 0) {
+    return formatCategoryName(warning)
+  }
+
+  for (const [key, value] of Object.entries(record)) {
+    if (value === false || value === null || value === undefined) continue
+    return formatCategoryName(key)
+  }
+
+  return 'No Flags'
+}
 
 // GET /api/evals/stats - Get evaluation statistics for the current user
 export async function GET(request: Request) {
@@ -45,13 +85,15 @@ export async function GET(request: Request) {
       poor: 0,
     }
 
+    const categoryMap = new Map<string, CategoryTotals>()
+
     // Calculate daily trends (always return exactly `days` points)
     const dailyMap = new Map<string, { count: number; totalScore: number; totalLatency: number }>()
 
     for (let offset = 0; offset < 100000; offset += pageSize) {
       const { data: page, error } = await supabase
         .from('evaluations')
-        .select('created_at, score, latency_ms, pii_tokens_redacted')
+        .select('created_at, score, latency_ms, pii_tokens_redacted, flags')
         .eq('user_id', user.id)
         .gte('created_at', startUtc.toISOString())
         .order('created_at', { ascending: true })
@@ -63,12 +105,19 @@ export async function GET(request: Request) {
 
       if (!page || page.length === 0) break
 
-      for (const e of page as Pick<Evaluation, 'created_at' | 'score' | 'latency_ms' | 'pii_tokens_redacted'>[]) {
+      for (const e of page as Pick<Evaluation, 'created_at' | 'score' | 'latency_ms' | 'pii_tokens_redacted' | 'flags'>[]) {
         total += 1
         totalScore += e.score
         totalLatency += e.latency_ms
         if (e.score >= 70) successCount += 1
         totalPiiRedacted += e.pii_tokens_redacted || 0
+
+        const category = deriveCategory(e.flags)
+        const existingCategory = categoryMap.get(category) || { totalScore: 0, evaluations: 0 }
+        categoryMap.set(category, {
+          totalScore: existingCategory.totalScore + e.score,
+          evaluations: existingCategory.evaluations + 1,
+        })
 
         if (e.score >= 90) scoreDistribution.excellent += 1
         else if (e.score >= 70) scoreDistribution.good += 1
@@ -114,6 +163,14 @@ export async function GET(request: Request) {
       }
     })
 
+    const categoryBreakdown = Array.from(categoryMap.entries())
+      .map(([category, totals]) => ({
+        category,
+        totalScore: Number(totals.totalScore.toFixed(1)),
+        evaluations: totals.evaluations,
+      }))
+      .sort((a, b) => b.totalScore - a.totalScore)
+
     const response = NextResponse.json({
       data: {
         totalEvals: total,
@@ -122,6 +179,7 @@ export async function GET(request: Request) {
         successRate: parseFloat(successRate.toFixed(1)),
         totalPiiRedacted,
         dailyTrends,
+        categoryBreakdown,
         scoreDistribution,
       },
     })
