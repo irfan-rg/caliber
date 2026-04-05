@@ -13,6 +13,94 @@ import { StatCardSkeletonGrid } from '@/components/Skeletons/StatCardSkeleton'
 import { ChartSkeleton } from '@/components/Skeletons/ChartSkeleton'
 
 const PAGE_SIZE = 20
+const EXPORT_PAGE_SIZE = 100
+
+type ExportFormat = 'csv' | 'json'
+
+interface EvalsApiResponse {
+  data: EvaluationRow[]
+  total: number
+  totalPages: number
+}
+
+interface ExportRecord {
+  interaction_id: string
+  category: string
+  score: number
+  latency_ms: number
+  pii_tokens_redacted: number
+  created_at: string
+  prompt: string
+  response: string
+}
+
+function appendFilterParams(params: URLSearchParams, options: {
+  query: string
+  category: string
+  startDate: string
+  endDate: string
+}) {
+  const { query, category, startDate, endDate } = options
+
+  if (query) {
+    params.set('q', query)
+  }
+
+  if (category !== 'all') {
+    params.set('category', category)
+  }
+
+  if (startDate) {
+    params.set('startDate', startDate)
+  }
+
+  if (endDate) {
+    params.set('endDate', endDate)
+  }
+}
+
+function escapeCsvValue(value: unknown) {
+  const stringValue = value == null ? '' : String(value)
+  if (!/[",\n\r]/.test(stringValue)) {
+    return stringValue
+  }
+
+  return `"${stringValue.replace(/"/g, '""')}"`
+}
+
+function buildCsv(rows: ExportRecord[]) {
+  const headers: Array<keyof ExportRecord> = [
+    'interaction_id',
+    'category',
+    'score',
+    'latency_ms',
+    'pii_tokens_redacted',
+    'created_at',
+    'prompt',
+    'response',
+  ]
+
+  const lines = rows.map((row) =>
+    headers.map((header) => escapeCsvValue(row[header])).join(',')
+  )
+
+  return [headers.join(','), ...lines].join('\n')
+}
+
+function triggerDownload(content: string, filename: string, mimeType: string) {
+  const blob = new Blob([content], { type: mimeType })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+
+  link.href = url
+  link.download = filename
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+
+  URL.revokeObjectURL(url)
+}
+
 const DEFAULT_FILTERS: EvalFilters = {
   query: '',
   category: 'all',
@@ -28,6 +116,7 @@ export default function EvaluationsPage() {
   const [totalCount, setTotalCount] = useState(0)
   const [filters, setFilters] = useState<EvalFilters>(DEFAULT_FILTERS)
   const [debouncedQuery, setDebouncedQuery] = useState('')
+  const [exportingFormat, setExportingFormat] = useState<ExportFormat | null>(null)
   const [progress, setProgress] = useState(0)
   const [isPending, startTransition] = useTransition()
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false) // Track if we've loaded before
@@ -59,21 +148,12 @@ export default function EvaluationsPage() {
         limit: String(PAGE_SIZE),
       })
 
-      if (debouncedQuery) {
-        queryParams.set('q', debouncedQuery)
-      }
-
-      if (filters.category !== 'all') {
-        queryParams.set('category', filters.category)
-      }
-
-      if (filters.startDate) {
-        queryParams.set('startDate', filters.startDate)
-      }
-
-      if (filters.endDate) {
-        queryParams.set('endDate', filters.endDate)
-      }
+      appendFilterParams(queryParams, {
+        query: debouncedQuery,
+        category: filters.category,
+        startDate: filters.startDate,
+        endDate: filters.endDate,
+      })
 
       // Use cached fetch for faster subsequent loads
       cachedResponse = await cachedFetch(`/api/evals?${queryParams.toString()}`, undefined, 8000) // 8s cache
@@ -81,7 +161,7 @@ export default function EvaluationsPage() {
         setLoading(false) // End loading instantly for cached data
       }
       if (cachedResponse.ok) {
-        const result = await cachedResponse.json() as { data: EvaluationRow[]; total: number; totalPages: number }
+        const result = await cachedResponse.json() as EvalsApiResponse
         setEvaluations(result.data || [])
         setTotalCount(result.total || 0)
         setTotalPages(result.totalPages || 1)
@@ -151,6 +231,105 @@ export default function EvaluationsPage() {
     setFilters(DEFAULT_FILTERS)
     setDebouncedQuery('')
     setPage(1)
+  }
+
+  const fetchAllFilteredEvaluations = useCallback(async () => {
+    const allRows: EvaluationRow[] = []
+    const queryValue = filters.query.trim()
+
+    for (let currentPage = 1; currentPage < 1000; currentPage += 1) {
+      const queryParams = new URLSearchParams({
+        page: String(currentPage),
+        limit: String(EXPORT_PAGE_SIZE),
+      })
+
+      appendFilterParams(queryParams, {
+        query: queryValue,
+        category: filters.category,
+        startDate: filters.startDate,
+        endDate: filters.endDate,
+      })
+
+      const response = await fetch(`/api/evals?${queryParams.toString()}`, {
+        method: 'GET',
+        cache: 'no-store',
+      })
+
+      if (!response.ok) {
+        throw new Error(`Export request failed (${response.status})`)
+      }
+
+      const payload = await response.json() as EvalsApiResponse
+      const rows = payload.data || []
+      allRows.push(...rows)
+
+      if (rows.length < EXPORT_PAGE_SIZE || currentPage >= (payload.totalPages || 1)) {
+        break
+      }
+    }
+
+    return allRows
+  }, [filters.category, filters.endDate, filters.query, filters.startDate])
+
+  const handleExport = async (format: ExportFormat) => {
+    if (exportingFormat) return
+
+    setExportingFormat(format)
+
+    try {
+      const rows = await fetchAllFilteredEvaluations()
+
+      if (rows.length === 0) {
+        notify({
+          variant: 'warning',
+          title: 'Nothing to export',
+          description: 'No evaluation records match your current filters.',
+        })
+        return
+      }
+
+      const normalizedRows: ExportRecord[] = rows.map((row) => ({
+        interaction_id: row.interaction_id,
+        category: row.category || 'No Flags',
+        score: typeof row.amount === 'number' ? row.amount : row.score,
+        latency_ms: row.latency_ms,
+        pii_tokens_redacted: row.pii_tokens_redacted ?? 0,
+        created_at: row.created_at,
+        prompt: row.prompt,
+        response: row.response,
+      }))
+
+      const stamp = new Date().toISOString().slice(0, 10)
+
+      if (format === 'json') {
+        triggerDownload(
+          JSON.stringify(normalizedRows, null, 2),
+          `evaluations-${stamp}.json`,
+          'application/json;charset=utf-8'
+        )
+      } else {
+        triggerDownload(
+          buildCsv(normalizedRows),
+          `evaluations-${stamp}.csv`,
+          'text/csv;charset=utf-8'
+        )
+      }
+
+      notify({
+        variant: 'success',
+        title: `Exported ${format.toUpperCase()}`,
+        description: `${normalizedRows.length.toLocaleString()} records downloaded.`,
+      })
+    } catch (error) {
+      console.error('Export error:', error)
+      notify({
+        variant: 'error',
+        title: 'Export failed',
+        description: 'Unable to export records. Please try again.',
+      })
+    } finally {
+      setExportingFormat(null)
+    }
   }
 
   const hasEvaluations = evaluations.length > 0
@@ -247,6 +426,8 @@ export default function EvaluationsPage() {
           onPageChange={handlePageChange}
           filters={filters}
           onFiltersChange={handleFiltersChange}
+          onExport={handleExport}
+          exportingFormat={exportingFormat}
           loading={loading || isPending}
           totalCount={totalCount}
         />

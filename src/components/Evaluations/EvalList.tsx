@@ -3,6 +3,7 @@
 import { Fragment, useMemo, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
+	ArrowDownTrayIcon,
 	ArrowTopRightOnSquareIcon,
 	ArrowTrendingDownIcon,
 	ArrowTrendingUpIcon,
@@ -40,6 +41,8 @@ export interface EvalFilters {
 	endDate: string
 }
 
+type ExportFormat = 'csv' | 'json'
+
 interface EvalListProps {
 	evaluations: EvaluationRow[]
 	page: number
@@ -47,6 +50,8 @@ interface EvalListProps {
 	onPageChange: (page: number) => void
 	filters: EvalFilters
 	onFiltersChange: (filters: EvalFilters) => void
+	onExport: (format: ExportFormat) => void
+	exportingFormat?: ExportFormat | null
 	loading?: boolean
 	totalCount?: number
 }
@@ -269,6 +274,8 @@ export default function EvalList({
 	onPageChange,
 	filters,
 	onFiltersChange,
+	onExport,
+	exportingFormat,
 	loading,
 	totalCount,
 }: EvalListProps) {
@@ -294,6 +301,8 @@ export default function EvalList({
 		filters.category !== 'all' ||
 		filters.startDate.length > 0 ||
 		filters.endDate.length > 0
+	const hasRows = (totalCount ?? evaluations.length) > 0
+	const isExporting = exportingFormat === 'csv' || exportingFormat === 'json'
 
 	const updateFilters = (partial: Partial<EvalFilters>) => {
 		onFiltersChange({
@@ -413,6 +422,44 @@ export default function EvalList({
 						<XMarkIcon className="h-4 w-4" />
 						Clear
 					</button>
+				</div>
+
+				<div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+					<p className="text-[11px] sm:text-xs text-[#8E8E93]">
+						{hasActiveFilters
+							? 'Export will include your active filters.'
+							: 'Export will include all evaluations in this dataset.'}
+					</p>
+					<div className="flex flex-wrap items-center gap-2">
+						<button
+							type="button"
+							onClick={() => onExport('csv')}
+							disabled={!hasRows || loading || isExporting}
+							className={cn(
+								'inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-semibold transition',
+								!hasRows || loading || isExporting
+									? 'cursor-not-allowed bg-black/5 text-[#8E8E93] dark:bg-white/5 dark:text-[#EBEBF5]/55'
+									: 'bg-[#007AFF]/12 text-[#007AFF] hover:bg-[#007AFF]/18'
+							)}
+						>
+							<ArrowDownTrayIcon className="h-3.5 w-3.5" />
+							{exportingFormat === 'csv' ? 'Exporting CSV...' : 'Export CSV'}
+						</button>
+						<button
+							type="button"
+							onClick={() => onExport('json')}
+							disabled={!hasRows || loading || isExporting}
+							className={cn(
+								'inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-semibold transition',
+								!hasRows || loading || isExporting
+									? 'cursor-not-allowed bg-black/5 text-[#8E8E93] dark:bg-white/5 dark:text-[#EBEBF5]/55'
+									: 'bg-[#1C1C1E]/10 text-[#1C1C1E] hover:bg-[#1C1C1E]/15 dark:bg-white/10 dark:text-white dark:hover:bg-white/15'
+							)}
+						>
+							<ArrowDownTrayIcon className="h-3.5 w-3.5" />
+							{exportingFormat === 'json' ? 'Exporting JSON...' : 'Export JSON'}
+						</button>
+					</div>
 				</div>
 			</div>
 
