@@ -332,6 +332,14 @@ export default function EvaluationsPage() {
     }
   }
 
+  const handleAddEvaluation = () => {
+    notify({
+      variant: 'default',
+      title: 'Admin action (demo)',
+      description: 'In a full workflow, this would open an Add Evaluation form.',
+    })
+  }
+
   const hasEvaluations = evaluations.length > 0
   const hasActiveFilters =
     debouncedQuery.length > 0 ||
@@ -427,6 +435,7 @@ export default function EvaluationsPage() {
           filters={filters}
           onFiltersChange={handleFiltersChange}
           onExport={handleExport}
+          onAddEvaluation={handleAddEvaluation}
           exportingFormat={exportingFormat}
           loading={loading || isPending}
           totalCount={totalCount}

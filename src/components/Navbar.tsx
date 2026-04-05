@@ -15,6 +15,7 @@ import {
 import type { User } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/client'
 import { useToast } from '@/components/ui/ToastProvider'
+import { useRole } from '@/components/RoleProvider'
 import { cn } from '@/lib/design-system'
 
 interface NavItem {
@@ -61,6 +62,7 @@ export default function Navbar() {
   const pathname = usePathname()
   const supabase = createClient()
   const { notify } = useToast()
+  const { role, setRole } = useRole()
   const dropdownRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
@@ -257,6 +259,35 @@ export default function Navbar() {
                         <p className="truncate text-sm text-[#8E8E93] dark:text-[#EBEBF5]/70">
                           {user.email}
                         </p>
+                      </div>
+                      <div className="mt-3 rounded-2xl border border-white/50 bg-white/70 p-3 dark:border-white/10 dark:bg-white/5">
+                        <p className="text-[11px] uppercase tracking-[0.22em] text-[#8E8E93]">Demo Role</p>
+                        <div className="mt-2 grid grid-cols-2 gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setRole('viewer')}
+                            className={cn(
+                              'rounded-xl px-3 py-2 text-xs font-semibold transition',
+                              role === 'viewer'
+                                ? 'bg-[#1C1C1E] text-white dark:bg-white dark:text-[#1C1C1E]'
+                                : 'bg-black/5 text-[#8E8E93] hover:bg-black/10 dark:bg-white/10 dark:hover:bg-white/15'
+                            )}
+                          >
+                            Viewer
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setRole('admin')}
+                            className={cn(
+                              'rounded-xl px-3 py-2 text-xs font-semibold transition',
+                              role === 'admin'
+                                ? 'bg-[#007AFF] text-white'
+                                : 'bg-[#007AFF]/10 text-[#007AFF] hover:bg-[#007AFF]/15'
+                            )}
+                          >
+                            Admin
+                          </button>
+                        </div>
                       </div>
                       <motion.button
                         type="button"

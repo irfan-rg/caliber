@@ -4,8 +4,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import Skeleton from 'react-loading-skeleton'
+import Link from 'next/link'
+import { PlusIcon } from '@heroicons/react/24/outline'
 import { createClient } from '@/lib/supabase/client'
 import { useToast } from '@/components/ui/ToastProvider'
+import { useRole } from '@/components/RoleProvider'
 import StatsCards from '@/components/Dashboard/StatsCards'
 import TrendChart from '@/components/Dashboard/TrendChart'
 import CategoryChart from '@/components/Dashboard/CategoryChart'
@@ -87,6 +90,7 @@ export default function DashboardPage() {
   const router = useRouter()
   const supabase = createClient()
   const { notify } = useToast()
+  const { isAdmin } = useRole()
   const skeletonPalette = useSkeletonPalette()
 
   const loadData = useCallback(async () => {
@@ -268,6 +272,15 @@ export default function DashboardPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1], delay: 0.05 }}
         >
+          {isAdmin && (
+            <Link
+              href="/evaluations"
+              className="inline-flex items-center gap-1.5 rounded-full bg-[#007AFF] px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold text-white shadow-[0_4px_12px_rgba(0,122,255,0.2)] transition-transform duration-200 hover:scale-[1.02]"
+            >
+              <PlusIcon className="h-3.5 w-3.5" />
+              Add Evaluation
+            </Link>
+          )}
           {[7, 14, 30].map((range) => {
             const isActive = days === range
             return (

@@ -4,6 +4,7 @@ import { Fragment, useMemo, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
 	ArrowDownTrayIcon,
+	PlusIcon,
 	ArrowTopRightOnSquareIcon,
 	ArrowTrendingDownIcon,
 	ArrowTrendingUpIcon,
@@ -17,6 +18,7 @@ import { Listbox, Popover, Transition } from '@headlessui/react'
 import { DayPicker } from 'react-day-picker'
 import { format } from 'date-fns'
 import { cn, motionVariants, transitions } from '@/lib/design-system'
+import { useRole } from '@/components/RoleProvider'
 import EvalDetailModal from './EvalDetailModal'
 
 export interface EvaluationRow {
@@ -51,6 +53,7 @@ interface EvalListProps {
 	filters: EvalFilters
 	onFiltersChange: (filters: EvalFilters) => void
 	onExport: (format: ExportFormat) => void
+	onAddEvaluation: () => void
 	exportingFormat?: ExportFormat | null
 	loading?: boolean
 	totalCount?: number
@@ -275,12 +278,14 @@ export default function EvalList({
 	filters,
 	onFiltersChange,
 	onExport,
+	onAddEvaluation,
 	exportingFormat,
 	loading,
 	totalCount,
 }: EvalListProps) {
 	const [selectedEval, setSelectedEval] = useState<EvaluationRow | null>(null)
 	const [modalOpen, setModalOpen] = useState(false)
+	const { isAdmin } = useRole()
 
 	const tableData = useMemo(() => {
 		return (evaluations ?? []).map((item) => ({
@@ -360,6 +365,16 @@ export default function EvalList({
 					</p>
 				</div>
 				<div className="flex items-center flex-wrap gap-2 text-[10px] sm:text-xs text-[#8E8E93]">
+					{isAdmin && (
+						<button
+							type="button"
+							onClick={onAddEvaluation}
+							className="inline-flex items-center gap-1 rounded-full bg-[#007AFF] px-3 py-1 text-[10px] sm:text-xs font-semibold text-white shadow-[0_4px_12px_rgba(0,122,255,0.2)] transition hover:scale-[1.02]"
+						>
+							<PlusIcon className="h-3.5 w-3.5" />
+							Add Evaluation
+						</button>
+					)}
 					<span className="inline-flex items-center gap-1 rounded-full bg-[#007AFF]/10 px-2 sm:px-3 py-0.5 sm:py-1 text-[#007AFF]">
 						<ArrowTrendingUpIcon className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> <span className="hidden sm:inline">Higher score = better</span><span className="sm:hidden">Better</span>
 					</span>

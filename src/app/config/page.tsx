@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { createClient } from '@/lib/supabase/client'
 import { useToast } from '@/components/ui/ToastProvider'
+import { useRole } from '@/components/RoleProvider'
 import { ChartSkeleton } from '@/components/Skeletons/ChartSkeleton'
 import { cachedFetch, clearCache, type CachedResponse } from '@/lib/cache'
 
@@ -34,6 +35,7 @@ export default function ConfigPage() {
   const router = useRouter()
   const supabase = createClient()
   const { notify } = useToast()
+  const { isViewer } = useRole()
 
   const loadConfig = useCallback(async () => {
     // Only show loading if we haven't loaded config before
@@ -121,6 +123,15 @@ export default function ConfigPage() {
     event.preventDefault()
     if (saving) return
 
+    if (isViewer) {
+      notify({
+        variant: 'warning',
+        title: 'Viewer mode is read-only',
+        description: 'Switch to Admin role from the navbar to edit settings.',
+      })
+      return
+    }
+
     if (!validate()) {
       notify({
         variant: 'warning',
@@ -167,6 +178,8 @@ export default function ConfigPage() {
     }
   }
 
+  const isReadOnly = saving || isViewer
+
   const policyOptions = useMemo(
     () => [
       { value: 'always' as const, label: 'Always evaluate each request' },
@@ -202,6 +215,11 @@ export default function ConfigPage() {
         <p className="text-sm text-[#8E8E93]">
           Fine-tune how and when your Agents are scored across environments.
         </p>
+        {isViewer && (
+          <p className="inline-flex rounded-full bg-[#FF9500]/12 px-3 py-1 text-xs font-medium text-[#FF9500]">
+            Viewer mode: settings are read-only.
+          </p>
+        )}
       </motion.div>
 
       <motion.form
@@ -222,9 +240,13 @@ export default function ConfigPage() {
                 <motion.button
                   key={option.value}
                   type="button"
-                  onClick={() => updateConfig('run_policy', option.value)}
-                  className="relative flex items-center justify-between rounded-2xl border border-white/50 bg-white/70 px-5 py-4 text-left transition hover:shadow-md dark:border-white/10 dark:bg-[#1D1D1F]/80"
-                  whileHover={{ scale: 1.01 }}
+                  onClick={() => {
+                    if (isViewer) return
+                    updateConfig('run_policy', option.value)
+                  }}
+                  disabled={isReadOnly}
+                  className="relative flex items-center justify-between rounded-2xl border border-white/50 bg-white/70 px-5 py-4 text-left transition hover:shadow-md disabled:cursor-not-allowed disabled:opacity-65 dark:border-white/10 dark:bg-[#1D1D1F]/80"
+                  whileHover={isReadOnly ? undefined : { scale: 1.01 }}
                   whileTap={{ scale: 0.98 }}
                 >
                   <div>
@@ -283,7 +305,7 @@ export default function ConfigPage() {
                   max={100}
                   value={config.sample_rate_pct}
                   onChange={(event) => updateConfig('sample_rate_pct', Number(event.target.value) || 0)}
-                  disabled={saving}
+                  disabled={isReadOnly}
                   className={
                     'peer w-full rounded-2xl border border-white/60 bg-white/80 px-4 pb-2 pt-5 text-sm font-medium text-[#1C1C1E] shadow-inner focus:border-[#007AFF] focus:outline-none focus:ring-2 focus:ring-[#007AFF]/20 dark:border-white/10 dark:bg-[#2C2C2E]/80 dark:text-white'
                   }
@@ -325,10 +347,14 @@ export default function ConfigPage() {
               type="button"
               role="switch"
               aria-checked={config.obfuscate_pii}
-              onClick={() => updateConfig('obfuscate_pii', !config.obfuscate_pii)}
+              onClick={() => {
+                if (isViewer) return
+                updateConfig('obfuscate_pii', !config.obfuscate_pii)
+              }}
+              disabled={isReadOnly}
               className={`relative flex h-7 w-12 items-center rounded-full px-1 transition ${
                 config.obfuscate_pii ? 'justify-end' : 'justify-start'
-              }`}
+              } ${isReadOnly ? 'cursor-not-allowed opacity-70' : ''}`}
               animate={{ backgroundColor: config.obfuscate_pii ? '#007AFF' : '#C7C7CC' }}
             >
               <motion.span
@@ -351,7 +377,7 @@ export default function ConfigPage() {
                 placeholder=" "
                 value={config.max_eval_per_day}
                 onChange={(event) => updateConfig('max_eval_per_day', Number(event.target.value) || 1)}
-                disabled={saving}
+                disabled={isReadOnly}
                 className={
                   'peer w-full rounded-2xl border border-white/60 bg-white/80 px-4 pb-2 pt-5 text-sm font-medium text-[#1C1C1E] shadow-inner focus:border-[#007AFF] focus:outline-none focus:ring-2 focus:ring-[#007AFF]/20 dark:border-white/10 dark:bg-[#2C2C2E]/80 dark:text-white'
                 }
@@ -381,7 +407,7 @@ export default function ConfigPage() {
         <div className="flex items-center justify-end gap-3 pt-4">
           <motion.button
             type="submit"
-            disabled={saving}
+            disabled={isReadOnly}
             className="relative inline-flex items-center gap-2 rounded-full bg-[#007AFF] px-5 py-2 text-sm font-semibold text-white shadow-[0_4px_12px_rgba(0,122,255,0.2)] transition-transform duration-200 hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-50"
             whileTap={{ scale: 0.97 }}
           >

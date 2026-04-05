@@ -5,6 +5,7 @@ import "react-loading-skeleton/dist/skeleton.css";
 import Navbar from "@/components/Navbar";
 import { ToastProvider } from "@/components/ui/ToastProvider";
 import MainWrapper from "@/components/MainWrapper";
+import { RoleProvider } from "@/components/RoleProvider";
 
 const outfit = Outfit({
   variable: "--font-outfit",
@@ -36,8 +37,10 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <ToastProvider>
-          <Navbar />
-          <MainWrapper>{children}</MainWrapper>
+          <RoleProvider>
+            <Navbar />
+            <MainWrapper>{children}</MainWrapper>
+          </RoleProvider>
         </ToastProvider>
       </body>
     </html>
