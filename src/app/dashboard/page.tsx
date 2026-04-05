@@ -252,7 +252,11 @@ export default function DashboardPage() {
       )}
 
       <div className="grid gap-6 sm:gap-8 xl:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
-        <TrendChart data={filteredTrends} />
+        <TrendChart
+          data={filteredTrends}
+          selectedDays={days}
+          onRangeChange={handleRangeChange}
+        />
         <RecentEvals evals={recentEvals} />
       </div>
     </div>

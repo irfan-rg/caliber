@@ -10,7 +10,7 @@ import {
   Tooltip,
   Legend,
 } from 'recharts'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useMemo } from 'react'
 import { cn, chartConfig, motionVariants, transitions } from '@/lib/design-system'
 
@@ -23,6 +23,8 @@ interface DailyTrend {
 
 interface TrendChartProps {
   data: DailyTrend[]
+  selectedDays?: number
+  onRangeChange?: (range: number) => void
 }
 
 interface TooltipPayloadItem {
@@ -75,7 +77,11 @@ function CustomTooltip({
   )
 }
 
-export default function TrendChart({ data }: TrendChartProps) {
+export default function TrendChart({
+  data,
+  selectedDays,
+  onRangeChange,
+}: TrendChartProps) {
   const formattedData = useMemo(() => {
     return (data ?? []).map((item) => ({
       ...item,
@@ -108,7 +114,7 @@ export default function TrendChart({ data }: TrendChartProps) {
   return (
     <motion.section
       className={cn(
-        'relative overflow-hidden rounded-2xl sm:rounded-3xl border border-white/60 bg-white/90 p-4 sm:p-6 shadow-[0_2px_8px_rgba(0,0,0,0.04)] backdrop-blur-3xl',
+        'relative self-start overflow-hidden rounded-2xl sm:rounded-3xl border border-white/60 bg-white/90 p-4 sm:p-6 shadow-[0_2px_8px_rgba(0,0,0,0.04)] backdrop-blur-3xl',
         'dark:border-white/10 dark:bg-[#1D1D1F]/85'
       )}
       variants={motionVariants.fadeUp}
@@ -117,13 +123,49 @@ export default function TrendChart({ data }: TrendChartProps) {
       transition={transitions.default}
       whileHover={{ scale: 1.005 }}
     >
-      <div className="mb-4 sm:mb-6 flex flex-col gap-1 sm:gap-2">
+      <div className="mb-4 sm:mb-6 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h3 className="text-base sm:text-lg font-semibold tracking-tight text-[#1C1C1E] dark:text-white">
             Daily Performance Trends
           </h3>
           <p className="text-xs sm:text-sm text-[#8E8E93]">Score and latency across the selected window</p>
         </div>
+        {typeof selectedDays === 'number' && onRangeChange && (
+          <div className="inline-flex self-start rounded-full border border-black/5 bg-black/[0.03] p-1 dark:border-white/10 dark:bg-white/5">
+            {[7, 14, 30].map((range) => {
+              const isActive = selectedDays === range
+              return (
+                <motion.button
+                  key={`chart-range-${range}`}
+                  type="button"
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => onRangeChange(range)}
+                  className="relative inline-flex items-center justify-center overflow-hidden rounded-full px-2.5 py-1 text-[11px] sm:px-3 sm:py-1.5 sm:text-xs font-semibold transition-colors"
+                >
+                  <span
+                    className={
+                      isActive
+                        ? 'text-white'
+                        : 'text-[#8E8E93] hover:text-[#1C1C1E] dark:hover:text-white'
+                    }
+                  >
+                    {range}d
+                  </span>
+                  <AnimatePresence>
+                    {isActive && (
+                      <motion.span
+                        layoutId="chart-range-pill"
+                        className="absolute inset-0 -z-10 rounded-full bg-[#007AFF] shadow-[0_4px_12px_rgba(0,122,255,0.2)]"
+                        transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                      />
+                    )}
+                  </AnimatePresence>
+                </motion.button>
+              )
+            })}
+          </div>
+        )}
       </div>
       <div className="h-[240px] sm:h-[320px]">
         <ResponsiveContainer>
